@@ -14,7 +14,8 @@ badge only.
 
 ## Install & run
 
-Run it **inside your agent's own environment** (where `deepagents` is installed):
+Once published to PyPI, run it **inside your agent's own environment** (where `deepagents`
+and the agent's other dependencies are installed):
 
 ```bash
 uv run --with deepagents-viz deepagents-viz path/to/agent_dir            # print Mermaid
@@ -25,6 +26,31 @@ uv run --with deepagents-viz deepagents-viz . --graph agent              # pick 
 
 `target` may be: a directory containing `langgraph.json`, a `langgraph.json` path, or a
 `file.py:attr` spec.
+
+### Running locally (before it's on PyPI)
+
+**Against the bundled test fixtures**, from this repository — `uv run` installs this project
+into its own environment, and the fixtures only need `deepagents` (a dev dependency):
+
+```bash
+uv run deepagents-viz tests/fixtures/simple              # print Mermaid
+uv run deepagents-viz tests/fixtures/factory -o out.mmd  # write a file
+# or, without the console script:
+uv run python -m deepagents_viz.cli tests/fixtures/simple
+```
+
+**Against an agent in another directory**, the tool must run in *that* agent's environment
+so all of the agent's own dependencies import. Overlay this checkout onto it with a local
+path instead of a package name:
+
+```bash
+cd /path/to/other-agent   # a uv project with its own deps + deepagents installed
+uv run --with-editable /path/to/deepagents-viz deepagents-viz m5/sales_assistant -o out.mmd
+```
+
+The rule either way: **the target's full dependency set must be importable in whatever
+environment runs the tool** — which is why an external agent uses its own env plus
+`--with-editable`, not this repo's environment.
 
 ## Viewing the diagram
 
