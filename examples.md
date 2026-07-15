@@ -246,7 +246,7 @@ Its `langgraph.json` uses an async factory and a shared env file:
 }
 ```
 
-The key rule (see the README): **the target's full dependency set must be importable in the
+The key rule (see the [README](README.md)): **the target's full dependency set must be importable in the
 environment that runs the tool.** An external agent has its own dependencies that this
 repository does not have, so you run the tool *inside the agent's own environment* and
 overlay this checkout with `--with-editable`, rather than from this repo's environment.
