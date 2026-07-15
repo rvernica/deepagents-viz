@@ -16,10 +16,12 @@ def model_label(model) -> str:
 
 
 def tool_info(tool, gated_names: set[str]) -> ToolInfo:
+    raw_name = getattr(tool, "name", None) or getattr(tool, "__name__", None)
+    gated = str(raw_name) in gated_names if raw_name is not None else False
     server = getattr(tool, "mcp_server", None) or getattr(tool, "_mcp_server", None)
     if server:
-        return ToolInfo(name=str(server), kind="mcp", mcp_server=str(server))
-    name = getattr(tool, "name", None) or getattr(tool, "__name__", None) or repr(tool)
+        return ToolInfo(name=str(server), kind="mcp", mcp_server=str(server), gated=gated)
+    name = raw_name if raw_name is not None else repr(tool)
     return ToolInfo(name=str(name), kind="function", gated=str(name) in gated_names)
 
 
@@ -92,6 +94,8 @@ def _subagent_model(spec: dict) -> AgentModel:
             include_defaults=False,
         ),
         hitl_gates=list(interrupt_on.keys()),
+        skills=[str(s) for s in (spec.get("skills") or [])],
+        memory=[str(m) for m in (spec.get("memory") or [])],
         permissions=permission_labels(spec.get("permissions")),
         mcp_servers=sorted({t.mcp_server for t in tools if t.mcp_server}),
     )

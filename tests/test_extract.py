@@ -96,3 +96,18 @@ def test_build_model_default_name_and_no_subagents():
     m = build_model_from_kwargs({"tools": [_fn_tool("a")]}, default_name="agent")
     assert m.name == "agent"
     assert m.subagents == []  # no synthetic general-purpose without subagents/task
+
+
+def test_tool_info_mcp_gated():
+    t = tool_info(SimpleNamespace(name="mail_create_draft", mcp_server="mail"), {"mail_create_draft"})
+    assert t.kind == "mcp"
+    assert t.mcp_server == "mail"
+    assert t.gated is True
+
+
+def test_subagent_populates_skills_and_memory():
+    spec = {"name": "s", "tools": [], "skills": ["/skills"], "memory": ["/AGENTS.md"]}
+    m = build_model_from_kwargs({"subagents": [spec]})
+    sub = m.subagents[0]
+    assert sub.skills == ["/skills"]
+    assert sub.memory == ["/AGENTS.md"]
