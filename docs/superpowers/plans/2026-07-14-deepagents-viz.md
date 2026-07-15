@@ -365,8 +365,12 @@ def test_tool_info_mcp():
 
 
 def test_middleware_labels_infers_and_marks_defaults():
+    # Instantiate a throwaway class so type(mw).__name__ == "CodeInterpreterMiddleware".
+    # (SimpleNamespace(__class__=...) would NOT work: __class__ is a data descriptor,
+    # so type(mw) stays SimpleNamespace regardless of the kwarg.)
+    code_interpreter_mw = type("CodeInterpreterMiddleware", (), {})()
     labels = middleware_labels(
-        [SimpleNamespace(__class__=type("CodeInterpreterMiddleware", (), {}))],
+        [code_interpreter_mw],
         skills=["/skills"],
         memory=["/AGENTS.md"],
         interrupt_on={"x": True},
@@ -574,7 +578,7 @@ def build_model_from_kwargs(
 Run: `uv run pytest tests/test_extract.py -v`
 Expected: PASS (6 passed)
 
-Note: `test_middleware_labels_infers_and_marks_defaults` builds a throwaway class named `CodeInterpreterMiddleware`; `_friendly_mw_name` strips the `Middleware` suffix to yield `CodeInterpreter`.
+Note: `test_middleware_labels_infers_and_marks_defaults` instantiates a throwaway class named `CodeInterpreterMiddleware` (so `type(mw).__name__` is that name); `_friendly_mw_name` strips the `Middleware` suffix to yield `CodeInterpreter`.
 
 - [ ] **Step 5: Commit**
 
