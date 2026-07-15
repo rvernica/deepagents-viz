@@ -31,6 +31,12 @@ def main(argv: list[str] | None = None) -> int:
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
         return 2
+    except Exception as exc:  # the target executes arbitrary user code on import/run
+        print(
+            f"Failed to load target {args.target!r}: {type(exc).__name__}: {exc}",
+            file=sys.stderr,
+        )
+        return 2
 
     diagram = render(model)
     if args.output:
