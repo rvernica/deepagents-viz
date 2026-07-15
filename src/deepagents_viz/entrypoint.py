@@ -8,6 +8,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from unittest.mock import MagicMock
 
 from deepagents_viz import intercept
 from deepagents_viz.extract import build_model_from_kwargs
@@ -85,15 +86,19 @@ def _import_module(module_file: Path, mod_name: str):
 def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
     t = parse_target(target, graph)
 
-    intercept.set_dummy_env()
-    intercept.install_create_deep_agent_patch()
-    intercept.install_mcp_stub()
-    intercept.reset()
-
     saved_sys_path = list(sys.path)
-    digest = hashlib.md5(str(t.module_file).encode()).hexdigest()[:12]
-    mod_name = f"_deepagents_viz_target_{digest}"
+    mod_name = None
     try:
+        digest = hashlib.md5(
+            str(t.module_file).encode(), usedforsecurity=False
+        ).hexdigest()[:12]
+        mod_name = f"_deepagents_viz_target_{digest}"
+
+        intercept.set_dummy_env()
+        intercept.install_create_deep_agent_patch()
+        intercept.install_mcp_stub()
+        intercept.reset()
+
         for d in reversed(t.syspath_dirs):
             sys.path.insert(0, str(d))
         module = _import_module(t.module_file, mod_name)
@@ -104,11 +109,14 @@ def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
             )
         attr = getattr(module, t.attr)
 
+        # A module-level built agent is our recorder's MagicMock (not callable
+        # as a factory); anything else callable is treated as a factory to run.
         if inspect.iscoroutinefunction(attr):
             asyncio.run(attr())
-        elif inspect.isfunction(attr):
-            attr()
-        # else: attr is an already-built module-level graph, captured at import.
+        elif callable(attr) and not isinstance(attr, MagicMock):
+            result = attr()
+            if inspect.iscoroutine(result):
+                asyncio.run(result)
 
         if not intercept.CAPTURED:
             raise RuntimeError(
@@ -117,5 +125,7 @@ def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
         return build_model_from_kwargs(intercept.CAPTURED[-1], default_name=t.graph_name)
     finally:
         sys.path[:] = saved_sys_path
-        sys.modules.pop(mod_name, None)
+        if mod_name is not None:
+            sys.modules.pop(mod_name, None)
         intercept.uninstall_create_deep_agent_patch()
+        intercept.uninstall_mcp_stub()

@@ -16,6 +16,8 @@ def _restore_create_deep_agent():
     original = deepagents.create_deep_agent
     yield
     deepagents.create_deep_agent = original
+    import deepagents_viz.intercept as _icpt
+    _icpt._original_create_deep_agent = None
 
 
 def test_parse_target_file_attr(tmp_path):
@@ -113,3 +115,26 @@ def test_load_sync_factory(tmp_path):
     )
     m = load_agent_model(str(tmp_path))
     assert m.name == "sync-built"
+
+
+def test_langgraph_missing_module_file_raises(tmp_path):
+    (tmp_path / "langgraph.json").write_text(
+        '{"dependencies": ["."], "graphs": {"agent": "./nope.py:agent"}}'
+    )
+    with pytest.raises(RuntimeError, match="does not exist"):
+        parse_target(str(tmp_path))
+
+
+def test_load_callable_object_factory(tmp_path):
+    (tmp_path / "agent.py").write_text(
+        "from deepagents import create_deep_agent\n"
+        "class Factory:\n"
+        "    def __call__(self):\n"
+        "        return create_deep_agent(model='m', tools=[], name='obj-built')\n"
+        "make = Factory()\n"
+    )
+    (tmp_path / "langgraph.json").write_text(
+        '{"dependencies": ["."], "graphs": {"agent": "./agent.py:make"}}'
+    )
+    m = load_agent_model(str(tmp_path))
+    assert m.name == "obj-built"

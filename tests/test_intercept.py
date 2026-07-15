@@ -14,6 +14,7 @@ def _restore_create_deep_agent():
     original = deepagents.create_deep_agent
     yield
     deepagents.create_deep_agent = original
+    intercept._original_create_deep_agent = None
 
 
 def test_set_dummy_env_only_fills_unset(monkeypatch):
@@ -80,3 +81,21 @@ def test_uninstall_restores_original():
     assert deepagents.create_deep_agent is not before
     intercept.uninstall_create_deep_agent_patch()
     assert deepagents.create_deep_agent is before
+
+
+def test_unpatch_mcp_class_restores():
+    class FakeClient:
+        def __init__(self, connections=None):
+            self.connections = connections
+
+        async def get_tools(self):
+            return ["real"]
+
+    orig_init = FakeClient.__init__
+    orig_get = FakeClient.get_tools
+    intercept._patch_mcp_class(FakeClient)
+    assert FakeClient.__init__ is not orig_init
+    intercept._patch_mcp_class(FakeClient)  # idempotent: no double-wrap
+    intercept._unpatch_mcp_class(FakeClient)
+    assert FakeClient.__init__ is orig_init
+    assert FakeClient.get_tools is orig_get

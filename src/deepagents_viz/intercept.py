@@ -93,10 +93,12 @@ def uninstall_create_deep_agent_patch() -> None:
 
 
 def _patch_mcp_class(cls) -> None:
-    """Patch an MCP client class so tool discovery is offline (no network). Idempotent."""
+    """Patch an MCP client class so tool discovery is offline (no network).
+    Idempotent, and reversible via _unpatch_mcp_class."""
     if getattr(cls, "_deepagents_viz_patched", False):
         return
     original_init = cls.__init__
+    original_get_tools = getattr(cls, "get_tools", None)
 
     def patched_init(self, connections=None, *args, **kwargs):
         self._captured_servers = list((connections or {}).keys())
@@ -111,9 +113,26 @@ def _patch_mcp_class(cls) -> None:
         servers = getattr(self, "_captured_servers", [])
         return [MCPPlaceholder(name=s, mcp_server=s) for s in servers]
 
+    cls._deepagents_viz_original = (original_init, original_get_tools)
     cls.__init__ = patched_init
     cls.get_tools = patched_get_tools
     cls._deepagents_viz_patched = True
+
+
+def _unpatch_mcp_class(cls) -> None:
+    """Restore a class previously patched by _patch_mcp_class."""
+    saved = getattr(cls, "_deepagents_viz_original", None)
+    if saved is None:
+        return
+    original_init, original_get_tools = saved
+    cls.__init__ = original_init
+    if original_get_tools is None:
+        if "get_tools" in cls.__dict__:
+            del cls.get_tools
+    else:
+        cls.get_tools = original_get_tools
+    del cls._deepagents_viz_original
+    cls._deepagents_viz_patched = False
 
 
 def install_mcp_stub() -> None:
@@ -122,3 +141,11 @@ def install_mcp_stub() -> None:
     except ImportError:
         return
     _patch_mcp_class(mcp_client.MultiServerMCPClient)
+
+
+def uninstall_mcp_stub() -> None:
+    try:
+        from langchain_mcp_adapters import client as mcp_client
+    except ImportError:
+        return
+    _unpatch_mcp_class(mcp_client.MultiServerMCPClient)
