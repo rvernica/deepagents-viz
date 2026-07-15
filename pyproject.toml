@@ -9,7 +9,9 @@ dependencies = []
 deepagents-viz = "deepagents_viz.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "deepagents>=0.5.9", "langchain-core", "ruff>=0.6", "pre-commit>=3.7"]
+# Keep the ruff floor's minor in sync with the ruff-pre-commit `rev` in
+# .pre-commit-config.yaml so local hooks and CI resolve matching output.
+dev = ["pytest>=8", "deepagents>=0.5.9", "langchain-core", "ruff>=0.15.21,<0.16", "pre-commit>=3.7"]
 
 [build-system]
 requires = ["hatchling"]
