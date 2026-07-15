@@ -37,7 +37,7 @@ def permission_labels(permissions) -> list[str]:
 
 def _friendly_mw_name(mw) -> str:
     name = type(mw).__name__
-    label = name[:-len("Middleware")] if name.endswith("Middleware") else name
+    label = name[: -len("Middleware")] if name.endswith("Middleware") else name
     if name == "MemoryMiddleware":
         sources = getattr(mw, "sources", None)
         if sources:

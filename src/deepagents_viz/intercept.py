@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import inspect
 import os
 from unittest.mock import MagicMock
@@ -107,10 +108,8 @@ def _patch_mcp_class(cls) -> None:
         self._captured_servers = list((connections or {}).keys())
         # The real __init__ may validate or connect; we only need the server
         # names, so any failure here is intentionally swallowed to stay offline.
-        try:
+        with contextlib.suppress(Exception):
             original_init(self, connections, *args, **kwargs)
-        except Exception:
-            pass
 
     async def patched_get_tools(self, *args, **kwargs):
         servers = getattr(self, "_captured_servers", [])

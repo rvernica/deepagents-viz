@@ -33,9 +33,7 @@ def _from_langgraph_json(json_path: Path, graph: str | None) -> Target:
         raise RuntimeError(f"Graph {graph_name!r} not in {json_path}")
     spec = graphs[graph_name]  # e.g. "./agent.py:make_graph"
     if not isinstance(spec, str) or ":" not in spec:
-        raise RuntimeError(
-            f"Graph spec {spec!r} in {json_path} is not in 'path:attr' form."
-        )
+        raise RuntimeError(f"Graph spec {spec!r} in {json_path} is not in 'path:attr' form.")
     rel_path, attr = spec.rsplit(":", 1)
     base = json_path.parent
     module_file = (base / rel_path).resolve()
@@ -58,9 +56,7 @@ def parse_target(target: str, graph: str | None = None) -> Target:
         path_part, attr = target.rsplit(":", 1)
         module_file = Path(path_part).resolve()
         if not module_file.is_file():
-            raise RuntimeError(
-                f"Target module {module_file} (from {target!r}) does not exist."
-            )
+            raise RuntimeError(f"Target module {module_file} (from {target!r}) does not exist.")
         return Target(module_file, attr, [module_file.parent], attr)
 
     p = Path(target)
@@ -93,9 +89,7 @@ def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
     saved_sys_path = list(sys.path)
     mod_name = None
     try:
-        digest = hashlib.md5(
-            str(t.module_file).encode(), usedforsecurity=False
-        ).hexdigest()[:12]
+        digest = hashlib.md5(str(t.module_file).encode(), usedforsecurity=False).hexdigest()[:12]
         mod_name = f"_deepagents_viz_target_{digest}"
 
         intercept.set_dummy_env()
@@ -108,9 +102,7 @@ def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
         module = _import_module(t.module_file, mod_name)
 
         if not hasattr(module, t.attr):
-            raise RuntimeError(
-                f"Attribute {t.attr!r} not found in module {t.module_file}"
-            )
+            raise RuntimeError(f"Attribute {t.attr!r} not found in module {t.module_file}")
         attr = getattr(module, t.attr)
 
         # Resolve the agent object for the selected attribute. A module-level
