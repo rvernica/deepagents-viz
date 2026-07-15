@@ -305,7 +305,87 @@ overlay this checkout with `--with-editable`, rather than from this repo's envir
    <https://mermaid.live>, or embed it in a ` ```mermaid ` fenced block in a Markdown
    file on GitHub.
 
+### Output
+
+Running the steps above against the `main` branch of `lca-deepagents` (with no API keys
+set — extraction is offline) produces:
+
+```
+graph TD
+  classDef gated stroke:#c00,stroke-width:2px;
+  subgraph chinook_sales_assistant["chinook-sales-assistant · claude-sonnet-4-6"]
+    chinook_sales_assistant_mw["🧩 ~Planning/TODO · ~Filesystem · SubAgent · Skills(/skills) · Memory(/AGENTS.md) · CodeInterpreter"]
+    chinook_sales_assistant_t["🔧 markdown_to_html · render_pie_chart · 🔌 MCP: mock-mail"]
+  end
+  chinook_sales_assistant -->|task| chinook_analyst
+  subgraph chinook_analyst["chinook-analyst · claude-haiku-4-5"]
+    chinook_analyst_mw["🧩 HITL · Memory(/agents/chinook-analyst/AGENTS.md)"]
+    chinook_analyst_t["🔧 query_chinook · introspect_schema · add_customer ⚠"]:::gated
+  end
+  chinook_sales_assistant -->|task| quote_reviewer
+  subgraph quote_reviewer["quote-reviewer · claude-sonnet-4-6"]
+  end
+  chinook_sales_assistant -->|task| inbox_manager
+  subgraph inbox_manager["inbox-manager · claude-haiku-4-5"]
+    inbox_manager_mw["🧩 HITL"]
+    inbox_manager_t["🔧 🔌 MCP: mock-mail"]
+  end
+  chinook_sales_assistant -->|task| genre_researcher
+  subgraph genre_researcher["genre-researcher · claude-haiku-4-5"]
+    genre_researcher_t["🔧 internet_search"]
+  end
+  chinook_sales_assistant -->|task| general_purpose
+  subgraph general_purpose["general-purpose (built-in, inherits main tools)"]
+  end
+```
+
+### Rendered
+
+```mermaid
+graph TD
+  classDef gated stroke:#c00,stroke-width:2px;
+  subgraph chinook_sales_assistant["chinook-sales-assistant · claude-sonnet-4-6"]
+    chinook_sales_assistant_mw["🧩 ~Planning/TODO · ~Filesystem · SubAgent · Skills(/skills) · Memory(/AGENTS.md) · CodeInterpreter"]
+    chinook_sales_assistant_t["🔧 markdown_to_html · render_pie_chart · 🔌 MCP: mock-mail"]
+  end
+  chinook_sales_assistant -->|task| chinook_analyst
+  subgraph chinook_analyst["chinook-analyst · claude-haiku-4-5"]
+    chinook_analyst_mw["🧩 HITL · Memory(/agents/chinook-analyst/AGENTS.md)"]
+    chinook_analyst_t["🔧 query_chinook · introspect_schema · add_customer ⚠"]:::gated
+  end
+  chinook_sales_assistant -->|task| quote_reviewer
+  subgraph quote_reviewer["quote-reviewer · claude-sonnet-4-6"]
+  end
+  chinook_sales_assistant -->|task| inbox_manager
+  subgraph inbox_manager["inbox-manager · claude-haiku-4-5"]
+    inbox_manager_mw["🧩 HITL"]
+    inbox_manager_t["🔧 🔌 MCP: mock-mail"]
+  end
+  chinook_sales_assistant -->|task| genre_researcher
+  subgraph genre_researcher["genre-researcher · claude-haiku-4-5"]
+    genre_researcher_t["🔧 internet_search"]
+  end
+  chinook_sales_assistant -->|task| general_purpose
+  subgraph general_purpose["general-purpose (built-in, inherits main tools)"]
+  end
+```
+
+### Reading it
+
+- The main `chinook-sales-assistant` runs `claude-sonnet-4-6` with a rich middleware
+  stack: the DeepAgents defaults plus `SubAgent`, `Skills(/skills)`, `Memory(/AGENTS.md)`,
+  and a `CodeInterpreter`. Its tools are `markdown_to_html`, `render_pie_chart`, and the
+  `mock-mail` MCP server (badge only — individual MCP tool names are not resolved).
+- Four declared subagents fan out from it:
+  - `chinook-analyst` (`claude-haiku-4-5`) has its own memory file and a gated
+    `add_customer` tool (`⚠`) alongside `query_chinook` and `introspect_schema`.
+  - `inbox-manager` (`claude-haiku-4-5`) is HITL-gated and works through the `mock-mail`
+    MCP server.
+  - `genre-researcher` (`claude-haiku-4-5`) has an `internet_search` tool.
+  - `quote-reviewer` (`claude-sonnet-4-6`) has no listed tools or extra middleware.
+- `general-purpose` is the built-in subagent, as in the earlier examples.
+
 > The exact diagram depends on how `sales_assistant` is defined at the commit you check
-> out — its model, tools, MCP servers, HITL gates, and subagents. Run the command above to
-> produce the diagram for your checkout; read it using the legend in
-> [How to read the diagrams](#how-to-read-the-diagrams) above.
+> out — its model, tools, MCP servers, HITL gates, and subagents. The output above is from
+> the `main` branch at the time of writing; re-run the command for your checkout and read
+> it using the legend in [How to read the diagrams](#how-to-read-the-diagrams) above.
