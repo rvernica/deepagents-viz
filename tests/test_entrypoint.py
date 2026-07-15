@@ -153,3 +153,19 @@ def test_load_selects_correct_module_level_graph(tmp_path):
     )
     assert load_agent_model(str(tmp_path), graph="a").name == "AAA"
     assert load_agent_model(str(tmp_path), graph="b").name == "BBB"
+
+
+def test_load_factory_selects_returned_agent(tmp_path):
+    # A factory that builds two agents and returns the FIRST must render the
+    # first (index-tagged), not the last create_deep_agent call.
+    (tmp_path / "agent.py").write_text(
+        "from deepagents import create_deep_agent\n"
+        "def make():\n"
+        "    first = create_deep_agent(model='m1', tools=[], name='FIRST')\n"
+        "    create_deep_agent(model='m2', tools=[], name='SECOND')\n"
+        "    return first\n"
+    )
+    (tmp_path / "langgraph.json").write_text(
+        '{"dependencies": ["."], "graphs": {"agent": "./agent.py:make"}}'
+    )
+    assert load_agent_model(str(tmp_path)).name == "FIRST"

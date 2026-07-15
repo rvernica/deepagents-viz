@@ -109,8 +109,6 @@ def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
             )
         attr = getattr(module, t.attr)
 
-        # A module-level built agent is our recorder's MagicMock (not callable
-        # as a factory); anything else callable is treated as a factory to run.
         # Resolve the agent object for the selected attribute. A module-level
         # agent is the recorder's (tagged) MagicMock; a factory is called to
         # produce one. Each recorded call tags its MagicMock with the index of
