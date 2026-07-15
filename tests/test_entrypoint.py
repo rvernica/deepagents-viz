@@ -10,7 +10,9 @@ FIXTURES = Path(__file__).parent / "fixtures"
 @pytest.fixture(autouse=True)
 def _restore_create_deep_agent():
     """Snapshot and restore deepagents.create_deep_agent so the patch never leaks
-    into other test modules (load_agent_model installs it but never reverts it)."""
+    into other test modules. Belt-and-suspenders: load_agent_model already
+    reverts the patch in its own finally block, this fixture just guards
+    against any future path that installs it without a matching revert."""
     import deepagents
 
     original = deepagents.create_deep_agent
@@ -138,3 +140,16 @@ def test_load_callable_object_factory(tmp_path):
     )
     m = load_agent_model(str(tmp_path))
     assert m.name == "obj-built"
+
+
+def test_load_selects_correct_module_level_graph(tmp_path):
+    (tmp_path / "agent.py").write_text(
+        "from deepagents import create_deep_agent\n"
+        "a = create_deep_agent(model='ma', tools=[], name='AAA')\n"
+        "b = create_deep_agent(model='mb', tools=[], name='BBB')\n"
+    )
+    (tmp_path / "langgraph.json").write_text(
+        '{"dependencies": ["."], "graphs": {"a": "./agent.py:a", "b": "./agent.py:b"}}'
+    )
+    assert load_agent_model(str(tmp_path), graph="a").name == "AAA"
+    assert load_agent_model(str(tmp_path), graph="b").name == "BBB"

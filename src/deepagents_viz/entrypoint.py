@@ -111,18 +111,29 @@ def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
 
         # A module-level built agent is our recorder's MagicMock (not callable
         # as a factory); anything else callable is treated as a factory to run.
+        # Resolve the agent object for the selected attribute. A module-level
+        # agent is the recorder's (tagged) MagicMock; a factory is called to
+        # produce one. Each recorded call tags its MagicMock with the index of
+        # its entry in CAPTURED, so we render the SELECTED graph rather than
+        # merely the last create_deep_agent call the import happened to run.
         if inspect.iscoroutinefunction(attr):
-            asyncio.run(attr())
+            agent_obj = asyncio.run(attr())
         elif callable(attr) and not isinstance(attr, MagicMock):
-            result = attr()
-            if inspect.iscoroutine(result):
-                asyncio.run(result)
+            agent_obj = attr()
+            if inspect.iscoroutine(agent_obj):
+                agent_obj = asyncio.run(agent_obj)
+        else:
+            agent_obj = attr
 
         if not intercept.CAPTURED:
             raise RuntimeError(
                 f"No create_deep_agent(...) call was captured for target {target!r}."
             )
-        return build_model_from_kwargs(intercept.CAPTURED[-1], default_name=t.graph_name)
+
+        index = getattr(agent_obj, "_deepagents_viz_index", None)
+        if not isinstance(index, int) or not (0 <= index < len(intercept.CAPTURED)):
+            index = len(intercept.CAPTURED) - 1
+        return build_model_from_kwargs(intercept.CAPTURED[index], default_name=t.graph_name)
     finally:
         sys.path[:] = saved_sys_path
         if mod_name is not None:

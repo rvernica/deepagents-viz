@@ -51,8 +51,11 @@ def _make_recorder(sig):
                     captured.setdefault(pname, pval)
             except TypeError:
                 pass
+        index = len(CAPTURED)
         CAPTURED.append(captured)
-        return MagicMock()
+        result = MagicMock()
+        result._deepagents_viz_index = index
+        return result
 
     _record._deepagents_viz_recorder = True
     return _record
