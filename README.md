@@ -52,6 +52,12 @@ The rule either way: **the target's full dependency set must be importable in wh
 environment runs the tool** — which is why an external agent uses its own env plus
 `--with-editable`, not this repo's environment.
 
+## Examples
+
+See [`examples.md`](examples.md) for worked, end-to-end walkthroughs: the two bundled test
+fixtures (with their commands and rendered Mermaid output) and a full setup for pointing
+the tool at an external agent, `m5/sales_assistant`.
+
 ## Viewing the diagram
 
 - Paste the output into <https://mermaid.live> (Export → PNG/SVG), or
