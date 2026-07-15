@@ -17,9 +17,8 @@ def _esc(text: str) -> str:
 
 
 def _tool_label(t: ToolInfo) -> str:
-    if t.kind == "mcp":
-        return f"🔌 MCP: {t.mcp_server}"
-    return f"{t.name} ⚠" if t.gated else t.name
+    label = f"🔌 MCP: {t.mcp_server}" if t.kind == "mcp" else t.name
+    return f"{label} ⚠" if t.gated else label
 
 
 def _emit_agent(a: AgentModel, lines: list[str]) -> None:

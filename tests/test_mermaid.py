@@ -54,3 +54,13 @@ def test_middleware_and_builtin_label():
     out = render(_main())
     assert "🧩 ~Planning/TODO · ~Filesystem · SubAgent" in out
     assert "general-purpose (built-in, inherits main tools)" in out
+
+
+def test_gated_mcp_tool_gets_marker():
+    a = AgentModel(
+        name="inbox",
+        tools=[ToolInfo(name="mail", kind="mcp", mcp_server="mock-mail", gated=True)],
+    )
+    out = render(a)
+    assert "🔌 MCP: mock-mail ⚠" in out
+    assert ":::gated" in out
