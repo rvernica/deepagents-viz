@@ -56,3 +56,60 @@ def test_load_async_factory():
     m = load_agent_model(str(FIXTURES / "factory"))
     assert m.name == "factory-agent"
     assert [t.name for t in m.tools] == ["ping"]
+
+
+def test_parse_target_dir_without_langgraph(tmp_path):
+    with pytest.raises(RuntimeError, match="No langgraph.json"):
+        parse_target(str(tmp_path))
+
+
+def test_parse_target_unrecognized(tmp_path):
+    bogus = tmp_path / "thing.txt"
+    bogus.write_text("x")
+    with pytest.raises(RuntimeError, match="Cannot interpret target"):
+        parse_target(str(bogus))
+
+
+def test_parse_target_explicit_graph_selection(tmp_path):
+    (tmp_path / "agent.py").write_text("agent = 1\nother = 2\n")
+    (tmp_path / "langgraph.json").write_text(
+        '{"dependencies": ["."], "graphs": {"a": "./agent.py:agent", "b": "./agent.py:other"}}'
+    )
+    t = parse_target(str(tmp_path), graph="b")
+    assert t.attr == "other"
+    assert t.graph_name == "b"
+
+
+def test_parse_target_missing_graph_name(tmp_path):
+    (tmp_path / "agent.py").write_text("agent = 1\n")
+    (tmp_path / "langgraph.json").write_text('{"graphs": {"a": "./agent.py:agent"}}')
+    with pytest.raises(RuntimeError, match="not in"):
+        parse_target(str(tmp_path), graph="nope")
+
+
+def test_parse_target_bad_spec_no_colon(tmp_path):
+    (tmp_path / "langgraph.json").write_text('{"graphs": {"a": "agent.py"}}')
+    with pytest.raises(RuntimeError, match="path:attr"):
+        parse_target(str(tmp_path))
+
+
+def test_load_missing_attr_raises(tmp_path):
+    (tmp_path / "agent.py").write_text("x = 1\n")
+    (tmp_path / "langgraph.json").write_text(
+        '{"dependencies": ["."], "graphs": {"agent": "./agent.py:nosuch"}}'
+    )
+    with pytest.raises(RuntimeError, match="not found"):
+        load_agent_model(str(tmp_path))
+
+
+def test_load_sync_factory(tmp_path):
+    (tmp_path / "agent.py").write_text(
+        "from deepagents import create_deep_agent\n"
+        "def build():\n"
+        "    return create_deep_agent(model='m', tools=[], name='sync-built')\n"
+    )
+    (tmp_path / "langgraph.json").write_text(
+        '{"dependencies": ["."], "graphs": {"agent": "./agent.py:build"}}'
+    )
+    m = load_agent_model(str(tmp_path))
+    assert m.name == "sync-built"

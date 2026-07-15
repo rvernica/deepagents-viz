@@ -6,6 +6,8 @@ from unittest.mock import MagicMock
 
 CAPTURED: list[dict] = []
 
+_original_create_deep_agent = None
+
 _DUMMY_KEYS = (
     "ANTHROPIC_API_KEY",
     "OPENAI_API_KEY",
@@ -52,23 +54,48 @@ def _make_recorder(sig):
         CAPTURED.append(captured)
         return MagicMock()
 
+    _record._deepagents_viz_recorder = True
     return _record
 
 
 def install_create_deep_agent_patch() -> None:
+    """Replace deepagents.create_deep_agent with a recorder. Idempotent: a second
+    call while already patched is a no-op, so the recorder keeps the signature
+    built from the *real* function rather than re-inspecting itself."""
+    global _original_create_deep_agent
     try:
         import deepagents
     except ImportError:
         return
+    current = deepagents.create_deep_agent
+    if getattr(current, "_deepagents_viz_recorder", False):
+        return
+    _original_create_deep_agent = current
     try:
-        sig = inspect.signature(deepagents.create_deep_agent)
+        sig = inspect.signature(current)
     except (TypeError, ValueError):
         sig = None
     deepagents.create_deep_agent = _make_recorder(sig)
 
 
+def uninstall_create_deep_agent_patch() -> None:
+    """Restore the original deepagents.create_deep_agent if we patched it."""
+    global _original_create_deep_agent
+    if _original_create_deep_agent is None:
+        return
+    try:
+        import deepagents
+    except ImportError:
+        _original_create_deep_agent = None
+        return
+    deepagents.create_deep_agent = _original_create_deep_agent
+    _original_create_deep_agent = None
+
+
 def _patch_mcp_class(cls) -> None:
-    """Patch an MCP client class so tool discovery is offline (no network)."""
+    """Patch an MCP client class so tool discovery is offline (no network). Idempotent."""
+    if getattr(cls, "_deepagents_viz_patched", False):
+        return
     original_init = cls.__init__
 
     def patched_init(self, connections=None, *args, **kwargs):
@@ -86,6 +113,7 @@ def _patch_mcp_class(cls) -> None:
 
     cls.__init__ = patched_init
     cls.get_tools = patched_get_tools
+    cls._deepagents_viz_patched = True
 
 
 def install_mcp_stub() -> None:

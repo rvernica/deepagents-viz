@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import importlib.util
 import inspect
 import json
@@ -30,9 +31,18 @@ def _from_langgraph_json(json_path: Path, graph: str | None) -> Target:
     if graph_name not in graphs:
         raise RuntimeError(f"Graph {graph_name!r} not in {json_path}")
     spec = graphs[graph_name]  # e.g. "./agent.py:make_graph"
+    if not isinstance(spec, str) or ":" not in spec:
+        raise RuntimeError(
+            f"Graph spec {spec!r} in {json_path} is not in 'path:attr' form."
+        )
     rel_path, attr = spec.rsplit(":", 1)
     base = json_path.parent
     module_file = (base / rel_path).resolve()
+    if not module_file.is_file():
+        raise RuntimeError(
+            f"Graph module {module_file} (from spec {spec!r}) does not exist. "
+            f"Module-style specs like 'pkg.mod:graph' are not supported; use a file path."
+        )
 
     syspath_dirs = [module_file.parent]
     for dep in data.get("dependencies", []) or []:
@@ -62,8 +72,7 @@ def parse_target(target: str, graph: str | None = None) -> Target:
     )
 
 
-def _import_module(module_file: Path):
-    mod_name = f"_deepagents_viz_target_{module_file.stem}"
+def _import_module(module_file: Path, mod_name: str):
     spec = importlib.util.spec_from_file_location(mod_name, module_file)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Could not load module from {module_file}")
@@ -81,20 +90,32 @@ def load_agent_model(target: str, graph: str | None = None) -> AgentModel:
     intercept.install_mcp_stub()
     intercept.reset()
 
-    for d in reversed(t.syspath_dirs):
-        sys.path.insert(0, str(d))
+    saved_sys_path = list(sys.path)
+    digest = hashlib.md5(str(t.module_file).encode()).hexdigest()[:12]
+    mod_name = f"_deepagents_viz_target_{digest}"
+    try:
+        for d in reversed(t.syspath_dirs):
+            sys.path.insert(0, str(d))
+        module = _import_module(t.module_file, mod_name)
 
-    module = _import_module(t.module_file)
-    attr = getattr(module, t.attr, None)
+        if not hasattr(module, t.attr):
+            raise RuntimeError(
+                f"Attribute {t.attr!r} not found in module {t.module_file}"
+            )
+        attr = getattr(module, t.attr)
 
-    if inspect.iscoroutinefunction(attr):
-        asyncio.run(attr())
-    elif callable(attr) and not intercept.CAPTURED:
-        attr()
+        if inspect.iscoroutinefunction(attr):
+            asyncio.run(attr())
+        elif inspect.isfunction(attr):
+            attr()
+        # else: attr is an already-built module-level graph, captured at import.
 
-    if not intercept.CAPTURED:
-        raise RuntimeError(
-            f"No create_deep_agent(...) call was captured for target {target!r}."
-        )
-
-    return build_model_from_kwargs(intercept.CAPTURED[-1], default_name=t.graph_name)
+        if not intercept.CAPTURED:
+            raise RuntimeError(
+                f"No create_deep_agent(...) call was captured for target {target!r}."
+            )
+        return build_model_from_kwargs(intercept.CAPTURED[-1], default_name=t.graph_name)
+    finally:
+        sys.path[:] = saved_sys_path
+        sys.modules.pop(mod_name, None)
+        intercept.uninstall_create_deep_agent_patch()

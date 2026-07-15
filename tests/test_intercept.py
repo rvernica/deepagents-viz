@@ -60,3 +60,23 @@ def test_patch_mcp_class_returns_offline_placeholders():
     tools = asyncio.run(client.get_tools())
     assert sorted(t.mcp_server for t in tools) == ["mock-mail", "other"]
     assert all(isinstance(t, intercept.MCPPlaceholder) for t in tools)
+
+
+def test_install_is_idempotent_preserves_signature():
+    intercept.reset()
+    intercept.install_create_deep_agent_patch()
+    intercept.install_create_deep_agent_patch()  # second call must be a no-op
+    import deepagents
+
+    deepagents.create_deep_agent("mymodel")  # positional normalization still works
+    assert intercept.CAPTURED[-1].get("model") == "mymodel"
+
+
+def test_uninstall_restores_original():
+    import deepagents
+
+    before = deepagents.create_deep_agent
+    intercept.install_create_deep_agent_patch()
+    assert deepagents.create_deep_agent is not before
+    intercept.uninstall_create_deep_agent_patch()
+    assert deepagents.create_deep_agent is before
