@@ -4,6 +4,7 @@ from deepagents_viz.extract import (
     build_model_from_kwargs,
     middleware_labels,
     model_label,
+    permission_labels,
     tool_info,
 )
 
@@ -111,3 +112,39 @@ def test_subagent_populates_skills_and_memory():
     sub = m.subagents[0]
     assert sub.skills == ["/skills"]
     assert sub.memory == ["/AGENTS.md"]
+
+
+def test_model_label_model_name_fallback():
+    # no .model attr, but has .model_name
+    assert model_label(SimpleNamespace(model_name="foo")) == "foo"
+
+
+def test_model_label_type_name_fallback():
+    # object with neither .model nor .model_name -> class name
+    weird = type("WeirdModel", (), {})()
+    assert model_label(weird) == "WeirdModel"
+
+
+def test_permission_labels():
+    perm = SimpleNamespace(operations=["read", "write"], paths=["/x/**"], mode="allow")
+    assert permission_labels([perm]) == ["allow read,write /x/**"]
+
+
+def test_middleware_memory_sources_branch():
+    mw = type("MemoryMiddleware", (), {})()
+    mw.sources = ["/mem.md"]
+    labels = middleware_labels(
+        [mw], skills=None, memory=None, interrupt_on=None,
+        has_subagents=False, include_defaults=False,
+    )
+    assert "Memory(/mem.md)" in labels
+
+
+def test_middleware_labels_dedup():
+    mw = type("MemoryMiddleware", (), {})()
+    mw.sources = ["/a"]
+    labels = middleware_labels(
+        [mw], skills=None, memory=["/a"], interrupt_on=None,
+        has_subagents=False, include_defaults=False,
+    )
+    assert labels.count("Memory(/a)") == 1

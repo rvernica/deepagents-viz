@@ -70,10 +70,10 @@ def middleware_labels(
     # de-duplicate while preserving order
     seen: set[str] = set()
     out: list[str] = []
-    for l in labels:
-        if l not in seen:
-            seen.add(l)
-            out.append(l)
+    for label in labels:
+        if label not in seen:
+            seen.add(label)
+            out.append(label)
     return out
 
 
