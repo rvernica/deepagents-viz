@@ -173,10 +173,20 @@ deepagents-viz <path> [-o OUTPUT] [--graph NAME]
 
 ## Out of scope (v1)
 
-- Graphviz and Excalidraw renderers (the `AgentModel` boundary makes these cheap to add later).
+- Excalidraw renderer.
 - Resolving individual MCP tool names (MCP shown as existence badge only).
 - Subagents built via nested `create_deep_agent` calls (DeepAgents uses dicts).
-- Rendering Mermaid to PNG/SVG images.
+- Rendering Mermaid to PNG/SVG images (view via mermaid.live or GitHub fenced blocks).
+
+## Planned future work
+
+- **Graphviz / DOT renderer.** Add a second renderer (`render/dot.py`) off the same `AgentModel`.
+  This is the intended path to **offline PNG/SVG from Python**: the `graphviz` pip package shells to
+  the native `dot` binary — no Node and no third-party web service, which is the main gap Mermaid
+  leaves. Graphviz's `dot` engine (Sugiyama layered layout with spline edge routing) also gives
+  higher layout quality on larger/denser agent trees. Mermaid remains the default for docs/GitHub
+  viewing; DOT is added for local rendering. The `AgentModel` boundary keeps this purely additive —
+  no change to extraction.
 
 ## Decisions
 
