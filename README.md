@@ -6,10 +6,11 @@ as a Mermaid diagram. Extraction is **offline**: no LLM keys, no live services.
 
 ## How it works
 
-`deepagents-viz` monkeypatches `create_deep_agent`, imports your agent module (running any
-async factory), and records the resolved arguments instead of building a real graph. Dummy
-env vars and a stubbed MCP client keep construction offline. MCP servers are shown as an
-existence badge only.
+`deepagents-viz` monkeypatches `create_deep_agent` so that calling it **records the resolved
+arguments and returns a lightweight stand-in — the real agent graph is never compiled.** It
+then imports your agent module (running any async factory) to trigger that call. Dummy env
+vars and a stubbed MCP client keep the import offline. MCP servers are shown as an existence
+badge only.
 
 ## Install & run
 
