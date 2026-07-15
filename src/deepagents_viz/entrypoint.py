@@ -54,9 +54,13 @@ def _from_langgraph_json(json_path: Path, graph: str | None) -> Target:
 
 
 def parse_target(target: str, graph: str | None = None) -> Target:
-    if ":" in target and target.split(":", 1)[0].endswith(".py"):
-        path_part, attr = target.split(":", 1)
+    if ":" in target and target.rsplit(":", 1)[0].endswith(".py"):
+        path_part, attr = target.rsplit(":", 1)
         module_file = Path(path_part).resolve()
+        if not module_file.is_file():
+            raise RuntimeError(
+                f"Target module {module_file} (from {target!r}) does not exist."
+            )
         return Target(module_file, attr, [module_file.parent], attr)
 
     p = Path(target)

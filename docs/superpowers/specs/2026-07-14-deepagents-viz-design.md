@@ -23,8 +23,9 @@ constructed lazily and do not hit the provider API until the agent is *invoked*,
 never does.
 
 The extraction technique is **monkeypatch `create_deep_agent`**: we replace it with a wrapper that
-records the fully-resolved keyword arguments at call time, then delegates to the real function and
-returns its result so any factory code continues to work. Captured kwargs:
+records the fully-resolved keyword arguments at call time, then returns a lightweight `MagicMock`
+stand-in **without invoking the real function**, so the real agent graph is never compiled (the
+stand-in absorbs any attribute access a factory performs on the return value). Captured kwargs:
 
 `model`, `tools`, `subagents`, `middleware`, `interrupt_on`, `skills`, `memory`, `permissions`, `name`.
 

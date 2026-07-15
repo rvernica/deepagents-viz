@@ -148,3 +148,28 @@ def test_middleware_labels_dedup():
         has_subagents=False, include_defaults=False,
     )
     assert labels.count("Memory(/a)") == 1
+
+
+def test_build_model_collapses_duplicate_mcp_badges():
+    m = build_model_from_kwargs(
+        {"tools": [_mcp_tool("mail"), _mcp_tool("mail"), _fn_tool("x")]}
+    )
+    mcp = [t for t in m.tools if t.kind == "mcp"]
+    assert len(mcp) == 1
+    assert mcp[0].mcp_server == "mail"
+    assert m.mcp_servers == ["mail"]
+
+
+def test_collapse_mcp_merges_gated_flag():
+    m = build_model_from_kwargs(
+        {
+            "tools": [
+                SimpleNamespace(name="a", mcp_server="s"),
+                SimpleNamespace(name="b", mcp_server="s"),
+            ],
+            "interrupt_on": {"b": True},
+        }
+    )
+    mcp = [t for t in m.tools if t.kind == "mcp"]
+    assert len(mcp) == 1
+    assert mcp[0].gated is True  # gating from tool 'b' preserved after collapse

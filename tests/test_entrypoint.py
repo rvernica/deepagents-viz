@@ -169,3 +169,8 @@ def test_load_factory_selects_returned_agent(tmp_path):
         '{"dependencies": ["."], "graphs": {"agent": "./agent.py:make"}}'
     )
     assert load_agent_model(str(tmp_path)).name == "FIRST"
+
+
+def test_parse_target_file_attr_missing_raises(tmp_path):
+    with pytest.raises(RuntimeError, match="does not exist"):
+        parse_target(f"{tmp_path}/nope.py:agent")

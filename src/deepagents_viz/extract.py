@@ -77,10 +77,27 @@ def middleware_labels(
     return out
 
 
+def _collapse_mcp_tools(tools: list[ToolInfo]) -> list[ToolInfo]:
+    """Collapse MCP tools to a single existence badge per server, OR-ing the
+    gated flag, so a server exposing several tools yields one badge."""
+    out: list[ToolInfo] = []
+    index_by_server: dict[str, int] = {}
+    for t in tools:
+        if t.kind == "mcp":
+            existing = index_by_server.get(t.mcp_server)
+            if existing is not None:
+                if t.gated:
+                    out[existing].gated = True
+                continue
+            index_by_server[t.mcp_server] = len(out)
+        out.append(t)
+    return out
+
+
 def _subagent_model(spec: dict) -> AgentModel:
     interrupt_on = spec.get("interrupt_on") or {}
     gated = set(interrupt_on.keys())
-    tools = [tool_info(t, gated) for t in (spec.get("tools") or [])]
+    tools = _collapse_mcp_tools([tool_info(t, gated) for t in (spec.get("tools") or [])])
     return AgentModel(
         name=str(spec.get("name", "subagent")),
         model_name=model_label(spec.get("model")),
@@ -109,7 +126,7 @@ def build_model_from_kwargs(
 ) -> AgentModel:
     interrupt_on = kwargs.get("interrupt_on") or {}
     gated = set(interrupt_on.keys())
-    tools = [tool_info(t, gated) for t in (kwargs.get("tools") or [])]
+    tools = _collapse_mcp_tools([tool_info(t, gated) for t in (kwargs.get("tools") or [])])
     subagent_specs = kwargs.get("subagents") or []
     has_subagents = bool(subagent_specs)
 
