@@ -19,6 +19,7 @@ def _restore_create_deep_agent():
     yield
     deepagents.create_deep_agent = original
     import deepagents_viz.intercept as _icpt
+
     _icpt._original_create_deep_agent = None
 
 

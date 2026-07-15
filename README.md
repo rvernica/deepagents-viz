@@ -57,6 +57,19 @@ environment runs the tool** — which is why an external agent uses its own env 
 - Paste the output into <https://mermaid.live> (Export → PNG/SVG), or
 - drop it in a ```` ```mermaid ```` fenced block in a Markdown file on GitHub.
 
+## Development
+
+```bash
+uv sync                        # install dev dependencies (pytest, ruff, pre-commit)
+uv run pre-commit install      # enable the git pre-commit hook (once per clone)
+uv run pytest                  # run the test suite
+uv run ruff check .            # lint
+uv run ruff format .           # auto-format
+```
+
+The pre-commit hook runs Ruff (lint + format) on staged files. The same checks, plus the
+test suite across Python 3.11–3.13, run in CI on every pull request and on pushes to `main`.
+
 ## Limitations
 
 - Individual MCP tool names are not resolved (existence badge per server).

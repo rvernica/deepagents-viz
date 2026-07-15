@@ -49,8 +49,8 @@ def test_middleware_labels_infers_and_marks_defaults():
     )
     assert "~Planning/TODO" in labels
     assert "~Filesystem" in labels
-    assert any(l.startswith("Skills") for l in labels)
-    assert any(l.startswith("Memory") for l in labels)
+    assert any(label.startswith("Skills") for label in labels)
+    assert any(label.startswith("Memory") for label in labels)
     assert "HITL" in labels
     assert "SubAgent" in labels
     assert "CodeInterpreter" in labels
@@ -100,7 +100,9 @@ def test_build_model_default_name_and_no_subagents():
 
 
 def test_tool_info_mcp_gated():
-    t = tool_info(SimpleNamespace(name="mail_create_draft", mcp_server="mail"), {"mail_create_draft"})
+    t = tool_info(
+        SimpleNamespace(name="mail_create_draft", mcp_server="mail"), {"mail_create_draft"}
+    )
     assert t.kind == "mcp"
     assert t.mcp_server == "mail"
     assert t.gated is True
@@ -134,8 +136,12 @@ def test_middleware_memory_sources_branch():
     mw = type("MemoryMiddleware", (), {})()
     mw.sources = ["/mem.md"]
     labels = middleware_labels(
-        [mw], skills=None, memory=None, interrupt_on=None,
-        has_subagents=False, include_defaults=False,
+        [mw],
+        skills=None,
+        memory=None,
+        interrupt_on=None,
+        has_subagents=False,
+        include_defaults=False,
     )
     assert "Memory(/mem.md)" in labels
 
@@ -144,16 +150,18 @@ def test_middleware_labels_dedup():
     mw = type("MemoryMiddleware", (), {})()
     mw.sources = ["/a"]
     labels = middleware_labels(
-        [mw], skills=None, memory=["/a"], interrupt_on=None,
-        has_subagents=False, include_defaults=False,
+        [mw],
+        skills=None,
+        memory=["/a"],
+        interrupt_on=None,
+        has_subagents=False,
+        include_defaults=False,
     )
     assert labels.count("Memory(/a)") == 1
 
 
 def test_build_model_collapses_duplicate_mcp_badges():
-    m = build_model_from_kwargs(
-        {"tools": [_mcp_tool("mail"), _mcp_tool("mail"), _fn_tool("x")]}
-    )
+    m = build_model_from_kwargs({"tools": [_mcp_tool("mail"), _mcp_tool("mail"), _fn_tool("x")]})
     mcp = [t for t in m.tools if t.kind == "mcp"]
     assert len(mcp) == 1
     assert mcp[0].mcp_server == "mail"

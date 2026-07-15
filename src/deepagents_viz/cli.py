@@ -17,11 +17,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Directory with langgraph.json, a langgraph.json path, or 'file.py:attr'.",
     )
     parser.add_argument(
-        "--output", "-o", default=None,
+        "--output",
+        "-o",
+        default=None,
         help="Write Mermaid to this file (default: stdout).",
     )
     parser.add_argument(
-        "--graph", default=None,
+        "--graph",
+        default=None,
         help="Graph name when langgraph.json declares more than one.",
     )
     args = parser.parse_args(argv)
