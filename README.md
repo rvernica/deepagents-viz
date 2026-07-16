@@ -8,9 +8,9 @@ as a Mermaid diagram. Extraction is **offline**: no LLM keys, no live services.
 
 `deepagents-viz` monkeypatches `create_deep_agent` so that calling it **records the resolved
 arguments and returns a lightweight stand-in — the real agent graph is never compiled.** It
-then imports your agent module (running any async factory) to trigger that call. Dummy env
-vars and a stubbed MCP client keep the import offline. MCP servers are shown as an existence
-badge only.
+then imports your agent module (calling any factory function, sync or async) to trigger that
+call. Dummy env vars and a stubbed MCP client keep the import offline. MCP servers are shown
+as an existence badge only.
 
 ## Install & run
 
@@ -79,8 +79,9 @@ test suite across Python 3.11–3.13, run in CI on every pull request and on pus
 ## Limitations
 
 - Individual MCP tool names are not resolved (existence badge per server).
-- `~`-prefixed middleware (e.g. `~Planning/TODO`, `~Filesystem`) is inferred from
-  DeepAgents defaults rather than read from the call.
+- The DeepAgents-bundled middleware and built-in tools (marked with a `📦` prefix — e.g.
+  `Planning`, `Filesystem`, `SubAgent`, and their tools) are inferred from the call's
+  configuration rather than read back from the composed middleware/tool list.
 - Subagents built via nested `create_deep_agent` calls are not modelled (DeepAgents
   uses dicts).
 
