@@ -47,13 +47,19 @@ BUILTIN_TOOLS: dict[str, list[str]] = {
 }
 
 
-def builtin_tools(middleware: list[MiddlewareInfo]) -> list[ToolInfo]:
-    """Built-in tools contributed by the bundled middleware an agent carries."""
+def builtin_tools(
+    middleware: list[MiddlewareInfo], gated: set[str] = frozenset()
+) -> list[ToolInfo]:
+    """Built-in tools contributed by the bundled middleware an agent carries.
+
+    A built-in tool named in `gated` (an `interrupt_on` key) is a HITL gate — e.g.
+    `interrupt_on={"edit_file": True}` — so it is marked gated like any other tool.
+    """
     out: list[ToolInfo] = []
     for mw in middleware:
         if mw.bundled:
             for name in BUILTIN_TOOLS.get(mw.name, []):
-                out.append(ToolInfo(name=name, kind="builtin", bundled=True))
+                out.append(ToolInfo(name=name, kind="builtin", gated=name in gated, bundled=True))
     return out
 
 
@@ -117,18 +123,22 @@ def _subagent_model(spec: dict) -> AgentModel:
     interrupt_on = spec.get("interrupt_on") or {}
     gated = set(interrupt_on.keys())
     tools = _collapse_mcp_tools([tool_info(t, gated) for t in (spec.get("tools") or [])])
+    # DeepAgents prepends the same default stack (Planning + Filesystem) to every
+    # declarative subagent (graph.py builds each with TodoListMiddleware +
+    # FilesystemMiddleware), so include_defaults=True. has_subagents is False because a
+    # subagent gets no SubAgentMiddleware — no `task` tool, and it can't spawn subagents.
     middleware = middleware_labels(
         spec.get("middleware"),
         skills=spec.get("skills"),
         memory=spec.get("memory"),
         interrupt_on=interrupt_on,
         has_subagents=False,
-        include_defaults=False,
+        include_defaults=True,
     )
     return AgentModel(
         name=str(spec.get("name", "subagent")),
         model_name=model_label(spec.get("model")),
-        tools=tools + builtin_tools(middleware),
+        tools=tools + builtin_tools(middleware, gated),
         middleware=middleware,
         hitl_gates=list(interrupt_on.keys()),
         skills=[str(s) for s in (spec.get("skills") or [])],
@@ -159,7 +169,7 @@ def build_model_from_kwargs(
         has_subagents=has_subagents,
         include_defaults=True,
     )
-    included = builtin_tools(middleware)
+    included = builtin_tools(middleware, gated)
 
     subagents = [_subagent_model(s) for s in subagent_specs]
     if include_general_purpose and has_subagents:
@@ -173,7 +183,7 @@ def build_model_from_kwargs(
             AgentModel(
                 name="general-purpose",
                 model_name=model_name,
-                tools=tools + builtin_tools(gp_middleware),
+                tools=tools + builtin_tools(gp_middleware, gated),
                 is_builtin=True,
             )
         )

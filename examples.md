@@ -115,8 +115,8 @@ graph TD
   end
   agent -->|"sub-agent (task)"| researcher
   subgraph researcher["researcher<br/>🧠 anthropic:claude-haiku-4-5"]
-    researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
-    researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/><span style='color:#c00'>⚠</span> add (HITL)</div>"]:::toolBox
+    researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL</div>"]:::mwBox
+    researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/><span style='color:#c00'>⚠</span> add (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   agent -->|"sub-agent (task)"| general_purpose
   subgraph general_purpose["📦 general-purpose<br/>🧠 anthropic:claude-sonnet-4-6"]
@@ -140,8 +140,8 @@ graph TD
   end
   agent -->|"sub-agent (task)"| researcher
   subgraph researcher["researcher<br/>🧠 anthropic:claude-haiku-4-5"]
-    researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
-    researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/><span style='color:#c00'>⚠</span> add (HITL)</div>"]:::toolBox
+    researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL</div>"]:::mwBox
+    researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/><span style='color:#c00'>⚠</span> add (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   agent -->|"sub-agent (task)"| general_purpose
   subgraph general_purpose["📦 general-purpose<br/>🧠 anthropic:claude-sonnet-4-6"]
@@ -159,8 +159,10 @@ graph TD
   user-defined `add` and `danger`, followed by the `📦`-prefixed built-ins from Planning,
   Filesystem, and SubAgent. `danger` is gated (red `⚠`, `(HITL)`) via
   `interrupt_on={"danger": True}`.
-- The `researcher` subagent runs `claude-haiku-4-5` with only `add`, itself gated by the
-  subagent's own `interrupt_on={"add": True}`.
+- The `researcher` subagent runs `claude-haiku-4-5`. Its own tool `add` is gated by the
+  subagent's `interrupt_on={"add": True}`. DeepAgents also gives every declarative subagent
+  the default Planning + Filesystem stack, so it too carries those `📦` middleware and their
+  built-in tools — but **not** `SubAgent`/`task`, since subagents can't spawn subagents.
 - `general-purpose` is the built-in subagent every DeepAgents agent gets for free. It
   inherits the main agent's model and tools (so `add`/`danger` appear, `danger` still
   gated) plus the Planning/Filesystem built-ins — but note it has **no `task` tool**, so
@@ -351,20 +353,23 @@ graph TD
   end
   chinook_sales_assistant -->|"sub-agent (task)"| chinook_analyst
   subgraph chinook_analyst["chinook-analyst<br/>🧠 claude-haiku-4-5"]
-    chinook_analyst_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL<br/>Memory</div>"]:::mwBox
-    chinook_analyst_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>query_chinook<br/>introspect_schema<br/><span style='color:#c00'>⚠</span> add_customer (HITL)</div>"]:::toolBox
+    chinook_analyst_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL<br/>Memory</div>"]:::mwBox
+    chinook_analyst_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>query_chinook<br/>introspect_schema<br/><span style='color:#c00'>⚠</span> add_customer (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| quote_reviewer
   subgraph quote_reviewer["quote-reviewer<br/>🧠 claude-sonnet-4-6"]
+    quote_reviewer_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    quote_reviewer_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| inbox_manager
   subgraph inbox_manager["inbox-manager<br/>🧠 claude-haiku-4-5"]
-    inbox_manager_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
-    inbox_manager_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>🔌 mock-mail (MCP)<br/><span style='color:#c00'>⚠</span> mail_create_draft (HITL)</div>"]:::toolBox
+    inbox_manager_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL</div>"]:::mwBox
+    inbox_manager_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/><span style='color:#c00'>⚠</span> mail_create_draft (HITL)</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| genre_researcher
   subgraph genre_researcher["genre-researcher<br/>🧠 claude-haiku-4-5"]
-    genre_researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>internet_search</div>"]:::toolBox
+    genre_researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    genre_researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>internet_search<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| general_purpose
   subgraph general_purpose["📦 general-purpose<br/>🧠 claude-sonnet-4-6"]
@@ -391,20 +396,23 @@ graph TD
   end
   chinook_sales_assistant -->|"sub-agent (task)"| chinook_analyst
   subgraph chinook_analyst["chinook-analyst<br/>🧠 claude-haiku-4-5"]
-    chinook_analyst_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL<br/>Memory</div>"]:::mwBox
-    chinook_analyst_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>query_chinook<br/>introspect_schema<br/><span style='color:#c00'>⚠</span> add_customer (HITL)</div>"]:::toolBox
+    chinook_analyst_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL<br/>Memory</div>"]:::mwBox
+    chinook_analyst_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>query_chinook<br/>introspect_schema<br/><span style='color:#c00'>⚠</span> add_customer (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| quote_reviewer
   subgraph quote_reviewer["quote-reviewer<br/>🧠 claude-sonnet-4-6"]
+    quote_reviewer_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    quote_reviewer_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| inbox_manager
   subgraph inbox_manager["inbox-manager<br/>🧠 claude-haiku-4-5"]
-    inbox_manager_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
-    inbox_manager_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>🔌 mock-mail (MCP)<br/><span style='color:#c00'>⚠</span> mail_create_draft (HITL)</div>"]:::toolBox
+    inbox_manager_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL</div>"]:::mwBox
+    inbox_manager_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/><span style='color:#c00'>⚠</span> mail_create_draft (HITL)</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| genre_researcher
   subgraph genre_researcher["genre-researcher<br/>🧠 claude-haiku-4-5"]
-    genre_researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>internet_search</div>"]:::toolBox
+    genre_researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    genre_researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>internet_search<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
   chinook_sales_assistant -->|"sub-agent (task)"| general_purpose
   subgraph general_purpose["📦 general-purpose<br/>🧠 claude-sonnet-4-6"]
@@ -426,8 +434,11 @@ graph TD
   DeepAgents default). Its tools are the user-defined `markdown_to_html` and
   `render_pie_chart`, the `mock-mail` MCP server (badge only), and the `📦` built-ins from
   its bundled middleware (including `task`, since it has `SubAgent`).
-- Four declared subagents fan out from it:
-  - `chinook-analyst` (`claude-haiku-4-5`) has its own `Memory` middleware and a gated
+- Four declared subagents fan out from it. DeepAgents gives *every* declarative subagent
+  the default Planning + Filesystem stack, so each carries those `📦` middleware and their
+  built-in tools (`write_todos`, `ls`, …) — but none gets `SubAgent`/`task`, so no subagent
+  can spawn further subagents:
+  - `chinook-analyst` (`claude-haiku-4-5`) adds its own `Memory` middleware and a gated
     `add_customer` tool (red `⚠`, `(HITL)`) alongside `query_chinook` and
     `introspect_schema`.
   - `inbox-manager` (`claude-haiku-4-5`) works through the `mock-mail` MCP server and gates
@@ -435,8 +446,9 @@ graph TD
     attach to the badge, so it appears as its own `⚠ mail_create_draft (HITL)` line. (Note
     the main agent has the same `mock-mail` server but no such gate — its mail access is
     ungated.)
-  - `genre-researcher` (`claude-haiku-4-5`) has an `internet_search` tool.
-  - `quote-reviewer` (`claude-sonnet-4-6`) has no listed tools or extra middleware.
+  - `genre-researcher` (`claude-haiku-4-5`) adds an `internet_search` tool.
+  - `quote-reviewer` (`claude-sonnet-4-6`) declares no tools of its own, so it shows just
+    the inherited default stack.
 - `general-purpose` is the built-in subagent (prefixed `📦`). It inherits the main model
   and the main agent's custom tools (`markdown_to_html`, `render_pie_chart`, `mock-mail`)
   plus the Planning/Filesystem built-ins — but **not** `task`, so it cannot spawn further

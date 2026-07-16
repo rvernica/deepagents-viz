@@ -93,6 +93,15 @@ def test_build_model_full_tree():
     assert researcher.model_name == "anthropic:claude-haiku-4-5"
     gated = [t.name for t in researcher.tools if t.gated]
     assert gated == ["save"]
+    # DeepAgents adds Planning + Filesystem to every declarative subagent, so the
+    # subagent carries those bundled middleware and their built-in tools — but NOT
+    # SubAgent (subagents get no SubAgentMiddleware, hence no `task`).
+    r_mw = [mw.name for mw in researcher.middleware]
+    assert "Planning" in r_mw and "Filesystem" in r_mw
+    assert "SubAgent" not in r_mw
+    r_tools = [t.name for t in researcher.tools]
+    assert "write_todos" in r_tools and "edit_file" in r_tools
+    assert "task" not in r_tools
 
     # Main agent lists its built-in tools (from Planning/Filesystem/SubAgent) as bundled.
     main_tool_names = [t.name for t in m.tools]
@@ -120,6 +129,17 @@ def test_build_model_default_name_and_no_subagents():
     m = build_model_from_kwargs({"tools": [_fn_tool("a")]}, default_name="agent")
     assert m.name == "agent"
     assert m.subagents == []  # no synthetic general-purpose without subagents/task
+
+
+def test_gated_builtin_tool_is_marked():
+    # A HITL gate can target a built-in tool (e.g. via filesystem permissions):
+    # interrupt_on={"edit_file": True} must mark the built-in edit_file as gated.
+    m = build_model_from_kwargs({"tools": [], "interrupt_on": {"edit_file": True}})
+    edit_file = next(t for t in m.tools if t.name == "edit_file")
+    assert edit_file.bundled is True
+    assert edit_file.gated is True
+    # a non-gated built-in stays ungated
+    assert not next(t for t in m.tools if t.name == "ls").gated
 
 
 def test_tool_info_mcp_gated():
