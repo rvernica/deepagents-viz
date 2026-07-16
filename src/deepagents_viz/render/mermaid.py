@@ -91,7 +91,8 @@ def render(agent: AgentModel) -> str:
         INIT,
         "graph TD",
         f"  classDef mwBox fill:{MW_FILL},stroke:{MW_STROKE},stroke-width:{BORDER},color:{TEXT};",
-        f"  classDef toolBox fill:{TOOL_FILL},stroke:{TOOL_STROKE},stroke-width:{BORDER},color:{TEXT};",
+        f"  classDef toolBox fill:{TOOL_FILL},stroke:{TOOL_STROKE},"
+        f"stroke-width:{BORDER},color:{TEXT};",
     ]
     styles: list[str] = []
     _emit_agent(agent, lines, styles)
