@@ -9,15 +9,15 @@ def test_cli_stdout(capsys):
     code = main([str(FIXTURES / "simple")])
     assert code == 0
     out = capsys.readouterr().out
-    assert out.startswith("graph TD")
-    assert "-->|task| researcher" in out
+    assert "graph TD" in out
+    assert '-->|"sub-agent (task)"| researcher' in out
 
 
 def test_cli_writes_file(tmp_path):
     out_file = tmp_path / "diagram.mmd"
     code = main([str(FIXTURES / "simple"), "--output", str(out_file)])
     assert code == 0
-    assert out_file.read_text().startswith("graph TD")
+    assert "graph TD" in out_file.read_text()
 
 
 def test_cli_bad_target_returns_2(capsys):
@@ -30,13 +30,13 @@ def test_cli_short_output_flag(tmp_path):
     out_file = tmp_path / "d.mmd"
     code = main([str(FIXTURES / "simple"), "-o", str(out_file)])
     assert code == 0
-    assert out_file.read_text().startswith("graph TD")
+    assert "graph TD" in out_file.read_text()
 
 
 def test_cli_graph_option(capsys):
     code = main([str(FIXTURES / "simple"), "--graph", "agent"])
     assert code == 0
-    assert capsys.readouterr().out.startswith("graph TD")
+    assert "graph TD" in capsys.readouterr().out
 
 
 def test_cli_file_attr_target(capsys):

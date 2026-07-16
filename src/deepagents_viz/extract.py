@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from deepagents_viz.model import AgentModel, ToolInfo
+from deepagents_viz.model import AgentModel, MiddlewareInfo, ToolInfo
 
 
 def model_label(model) -> str:
@@ -35,14 +35,37 @@ def permission_labels(permissions) -> list[str]:
     return labels
 
 
+# Tools that each DeepAgents-bundled middleware contributes (introspected from the
+# default middleware instances). Skills/Memory register no tools.
+# `execute` is deliberately excluded: FilesystemMiddleware registers it unconditionally,
+# but it only works with a SandboxBackendProtocol backend and errors at runtime otherwise
+# — which we can't tell from the inferred defaults. The six below are always live.
+BUILTIN_TOOLS: dict[str, list[str]] = {
+    "Planning": ["write_todos"],
+    "Filesystem": ["ls", "read_file", "write_file", "edit_file", "glob", "grep"],
+    "SubAgent": ["task"],
+}
+
+
+def builtin_tools(
+    middleware: list[MiddlewareInfo], gated: set[str] = frozenset()
+) -> list[ToolInfo]:
+    """Built-in tools contributed by the bundled middleware an agent carries.
+
+    A built-in tool named in `gated` (an `interrupt_on` key) is a HITL gate — e.g.
+    `interrupt_on={"edit_file": True}` — so it is marked gated like any other tool.
+    """
+    out: list[ToolInfo] = []
+    for mw in middleware:
+        if mw.bundled:
+            for name in BUILTIN_TOOLS.get(mw.name, []):
+                out.append(ToolInfo(name=name, kind="builtin", gated=name in gated, bundled=True))
+    return out
+
+
 def _friendly_mw_name(mw) -> str:
     name = type(mw).__name__
-    label = name[: -len("Middleware")] if name.endswith("Middleware") else name
-    if name == "MemoryMiddleware":
-        sources = getattr(mw, "sources", None)
-        if sources:
-            return f"Memory({','.join(str(s) for s in sources)})"
-    return label
+    return name[: -len("Middleware")] if name.endswith("Middleware") else name
 
 
 def middleware_labels(
@@ -53,26 +76,28 @@ def middleware_labels(
     interrupt_on,
     has_subagents: bool,
     include_defaults: bool,
-) -> list[str]:
-    labels: list[str] = []
+) -> list[MiddlewareInfo]:
+    labels: list[MiddlewareInfo] = []
+    # DeepAgents-bundled middleware, synthesised from configuration.
     if include_defaults:
-        labels += ["~Planning/TODO", "~Filesystem"]
+        labels += [MiddlewareInfo("Planning"), MiddlewareInfo("Filesystem")]
     if has_subagents:
-        labels.append("SubAgent")
+        labels.append(MiddlewareInfo("SubAgent"))
     if skills:
-        labels.append(f"Skills({','.join(str(s) for s in skills)})")
+        labels.append(MiddlewareInfo("Skills"))
     if memory:
-        labels.append(f"Memory({','.join(str(m) for m in memory)})")
+        labels.append(MiddlewareInfo("Memory"))
     if interrupt_on:
-        labels.append("HITL")
+        labels.append(MiddlewareInfo("HITL"))
+    # User-supplied middleware are not bundled.
     for mw in middleware or []:
-        labels.append(_friendly_mw_name(mw))
-    # de-duplicate while preserving order
+        labels.append(MiddlewareInfo(_friendly_mw_name(mw), bundled=False))
+    # de-duplicate by name while preserving order
     seen: set[str] = set()
-    out: list[str] = []
+    out: list[MiddlewareInfo] = []
     for label in labels:
-        if label not in seen:
-            seen.add(label)
+        if label.name not in seen:
+            seen.add(label.name)
             out.append(label)
     return out
 
@@ -98,18 +123,23 @@ def _subagent_model(spec: dict) -> AgentModel:
     interrupt_on = spec.get("interrupt_on") or {}
     gated = set(interrupt_on.keys())
     tools = _collapse_mcp_tools([tool_info(t, gated) for t in (spec.get("tools") or [])])
+    # DeepAgents prepends the same default stack (Planning + Filesystem) to every
+    # declarative subagent (graph.py builds each with TodoListMiddleware +
+    # FilesystemMiddleware), so include_defaults=True. has_subagents is False because a
+    # subagent gets no SubAgentMiddleware — no `task` tool, and it can't spawn subagents.
+    middleware = middleware_labels(
+        spec.get("middleware"),
+        skills=spec.get("skills"),
+        memory=spec.get("memory"),
+        interrupt_on=interrupt_on,
+        has_subagents=False,
+        include_defaults=True,
+    )
     return AgentModel(
         name=str(spec.get("name", "subagent")),
         model_name=model_label(spec.get("model")),
-        tools=tools,
-        middleware=middleware_labels(
-            spec.get("middleware"),
-            skills=spec.get("skills"),
-            memory=spec.get("memory"),
-            interrupt_on=interrupt_on,
-            has_subagents=False,
-            include_defaults=False,
-        ),
+        tools=tools + builtin_tools(middleware, gated),
+        middleware=middleware,
         hitl_gates=list(interrupt_on.keys()),
         skills=[str(s) for s in (spec.get("skills") or [])],
         memory=[str(m) for m in (spec.get("memory") or [])],
@@ -129,23 +159,40 @@ def build_model_from_kwargs(
     tools = _collapse_mcp_tools([tool_info(t, gated) for t in (kwargs.get("tools") or [])])
     subagent_specs = kwargs.get("subagents") or []
     has_subagents = bool(subagent_specs)
+    model_name = model_label(kwargs.get("model"))
+
+    middleware = middleware_labels(
+        kwargs.get("middleware"),
+        skills=kwargs.get("skills"),
+        memory=kwargs.get("memory"),
+        interrupt_on=interrupt_on,
+        has_subagents=has_subagents,
+        include_defaults=True,
+    )
+    included = builtin_tools(middleware, gated)
 
     subagents = [_subagent_model(s) for s in subagent_specs]
     if include_general_purpose and has_subagents:
-        subagents.append(AgentModel(name="general-purpose", is_builtin=True))
+        # general-purpose inherits the main agent's model and its custom tools (graph.py
+        # passes `tools=_tools`). It is built with plain create_agent — its middleware
+        # stack has Planning + Filesystem but NOT SubAgentMiddleware, so it does NOT get
+        # the `task` tool and cannot spawn further subagents. Its built-ins therefore
+        # exclude SubAgent's `task`.
+        gp_middleware = [m for m in middleware if m.name in {"Planning", "Filesystem", "Skills"}]
+        subagents.append(
+            AgentModel(
+                name="general-purpose",
+                model_name=model_name,
+                tools=tools + builtin_tools(gp_middleware, gated),
+                is_builtin=True,
+            )
+        )
 
     return AgentModel(
         name=str(kwargs.get("name") or default_name),
-        model_name=model_label(kwargs.get("model")),
-        tools=tools,
-        middleware=middleware_labels(
-            kwargs.get("middleware"),
-            skills=kwargs.get("skills"),
-            memory=kwargs.get("memory"),
-            interrupt_on=interrupt_on,
-            has_subagents=has_subagents,
-            include_defaults=True,
-        ),
+        model_name=model_name,
+        tools=tools + included,
+        middleware=middleware,
         hitl_gates=list(interrupt_on.keys()),
         skills=[str(s) for s in (kwargs.get("skills") or [])],
         memory=[str(m) for m in (kwargs.get("memory") or [])],

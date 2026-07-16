@@ -48,19 +48,21 @@ def test_load_module_level_agent():
     m = load_agent_model(str(FIXTURES / "simple"))
     assert m.name == "agent"  # no name= kwarg → falls back to graph name
     assert m.model_name == "anthropic:claude-sonnet-4-6"
-    assert sorted(t.name for t in m.tools) == ["add", "danger"]
+    # user tools (built-in bundled tools are appended separately)
+    assert sorted(t.name for t in m.tools if not t.bundled) == ["add", "danger"]
     assert m.hitl_gates == ["danger"]
     sub_names = [s.name for s in m.subagents]
     assert sub_names == ["researcher", "general-purpose"]
     assert m.subagents[0].hitl_gates == ["add"]
-    assert "SubAgent" in m.middleware
-    assert "~Planning/TODO" in m.middleware
+    mw_names = [mw.name for mw in m.middleware]
+    assert "SubAgent" in mw_names
+    assert "Planning" in mw_names
 
 
 def test_load_async_factory():
     m = load_agent_model(str(FIXTURES / "factory"))
     assert m.name == "factory-agent"
-    assert [t.name for t in m.tools] == ["ping"]
+    assert [t.name for t in m.tools if not t.bundled] == ["ping"]
 
 
 def test_parse_target_dir_without_langgraph(tmp_path):

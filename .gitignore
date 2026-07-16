@@ -1,2 +1,5 @@
 # roborev snapshots
 /.roborev/
+
+# local, machine-specific Claude Code notes
+/CLAUDE.local.md
