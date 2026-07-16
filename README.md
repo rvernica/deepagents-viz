@@ -4,13 +4,63 @@ Render a [LangChain DeepAgents](https://docs.langchain.com/oss/python/deepagents
 agent's architecture — subagent hierarchy, tools per agent, HITL gates, and middleware —
 as a Mermaid diagram. Extraction is **offline**: no LLM keys, no live services.
 
+## Example
+
+Point it at a real DeepAgents project — here the
+[`m5/sales_assistant`](https://github.com/langchain-ai/lca-deepagents/tree/main/python/m5/sales_assistant)
+agent from `langchain-ai/lca-deepagents` — and it maps the whole hierarchy: the main agent,
+each subagent it can dispatch (`sub-agent (task)` edges), and every agent's model, middleware
+(`📦` marks DeepAgents' bundled defaults), tools, and HITL gates (red `⚠`). See
+[`examples.md`](examples.md) for the full walkthrough and a legend.
+
+```mermaid
+%%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
+graph TD
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a;
+  subgraph chinook_sales_assistant["chinook-sales-assistant<br/>🧠 claude-sonnet-4-6"]
+    chinook_sales_assistant_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 Skills<br/>📦 Memory<br/>CodeInterpreter</div>"]:::mwBox
+    chinook_sales_assistant_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
+  end
+  chinook_sales_assistant -->|"sub-agent (task)"| chinook_analyst
+  subgraph chinook_analyst["chinook-analyst<br/>🧠 claude-haiku-4-5"]
+    chinook_analyst_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL<br/>Memory</div>"]:::mwBox
+    chinook_analyst_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>query_chinook<br/>introspect_schema<br/><span style='color:#c00'>⚠</span> add_customer (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
+  end
+  chinook_sales_assistant -->|"sub-agent (task)"| quote_reviewer
+  subgraph quote_reviewer["quote-reviewer<br/>🧠 claude-sonnet-4-6"]
+    quote_reviewer_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    quote_reviewer_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
+  end
+  chinook_sales_assistant -->|"sub-agent (task)"| inbox_manager
+  subgraph inbox_manager["inbox-manager<br/>🧠 claude-haiku-4-5"]
+    inbox_manager_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 HITL</div>"]:::mwBox
+    inbox_manager_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/><span style='color:#c00'>⚠</span> mail_create_draft (HITL)</div>"]:::toolBox
+  end
+  chinook_sales_assistant -->|"sub-agent (task)"| genre_researcher
+  subgraph genre_researcher["genre-researcher<br/>🧠 claude-haiku-4-5"]
+    genre_researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    genre_researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>internet_search<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
+  end
+  chinook_sales_assistant -->|"sub-agent (task)"| general_purpose
+  subgraph general_purpose["📦 general-purpose<br/>🧠 claude-sonnet-4-6"]
+    general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
+  end
+  style chinook_sales_assistant fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style chinook_analyst fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style quote_reviewer fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style inbox_manager fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style genre_researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+```
+
 ## How it works
 
 `deepagents-viz` monkeypatches `create_deep_agent` so that calling it **records the resolved
 arguments and returns a lightweight stand-in — the real agent graph is never compiled.** It
-then imports your agent module (running any async factory) to trigger that call. Dummy env
-vars and a stubbed MCP client keep the import offline. MCP servers are shown as an existence
-badge only.
+then imports your agent module (calling any factory function, sync or async) to trigger that
+call. Dummy env vars and a stubbed MCP client keep the import offline. MCP servers are shown
+as an existence badge only.
 
 ## Install & run
 
@@ -79,8 +129,9 @@ test suite across Python 3.11–3.13, run in CI on every pull request and on pus
 ## Limitations
 
 - Individual MCP tool names are not resolved (existence badge per server).
-- `~`-prefixed middleware (e.g. `~Planning/TODO`, `~Filesystem`) is inferred from
-  DeepAgents defaults rather than read from the call.
+- The DeepAgents-bundled middleware and built-in tools (marked with a `📦` prefix — e.g.
+  `Planning`, `Filesystem`, `SubAgent`, and their tools) are inferred from the call's
+  configuration rather than read back from the composed middleware/tool list.
 - Subagents built via nested `create_deep_agent` calls are not modelled (DeepAgents
   uses dicts).
 
