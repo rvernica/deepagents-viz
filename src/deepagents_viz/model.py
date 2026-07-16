@@ -10,6 +10,13 @@ class ToolInfo:
     kind: Literal["function", "mcp", "builtin"] = "function"
     gated: bool = False
     mcp_server: str | None = None
+    bundled: bool = False
+
+
+@dataclass
+class MiddlewareInfo:
+    name: str
+    bundled: bool = True
 
 
 @dataclass
@@ -17,7 +24,7 @@ class AgentModel:
     name: str
     model_name: str = ""
     tools: list[ToolInfo] = field(default_factory=list)
-    middleware: list[str] = field(default_factory=list)
+    middleware: list[MiddlewareInfo] = field(default_factory=list)
     hitl_gates: list[str] = field(default_factory=list)
     skills: list[str] = field(default_factory=list)
     memory: list[str] = field(default_factory=list)

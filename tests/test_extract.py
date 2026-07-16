@@ -47,13 +47,18 @@ def test_middleware_labels_infers_and_marks_defaults():
         has_subagents=True,
         include_defaults=True,
     )
-    assert "~Planning/TODO" in labels
-    assert "~Filesystem" in labels
-    assert any(label.startswith("Skills") for label in labels)
-    assert any(label.startswith("Memory") for label in labels)
-    assert "HITL" in labels
-    assert "SubAgent" in labels
-    assert "CodeInterpreter" in labels
+    names = [m.name for m in labels]
+    assert "Planning" in names
+    assert "Filesystem" in names
+    assert "Skills" in names
+    assert "Memory" in names
+    assert "HITL" in names
+    assert "SubAgent" in names
+    assert "CodeInterpreter" in names
+    # DeepAgents-synthesised entries are bundled; user middleware is not.
+    bundled = {m.name: m.bundled for m in labels}
+    assert bundled["Planning"] is True
+    assert bundled["CodeInterpreter"] is False
 
 
 def test_build_model_full_tree():
@@ -79,7 +84,7 @@ def test_build_model_full_tree():
     assert m.model_name == "anthropic:claude-sonnet-4-6"
     assert m.hitl_gates == ["compile"]
     assert m.mcp_servers == ["mock-mail"]
-    assert "SubAgent" in m.middleware
+    assert "SubAgent" in [mw.name for mw in m.middleware]
 
     names = [s.name for s in m.subagents]
     assert names == ["researcher", "general-purpose"]
@@ -89,8 +94,26 @@ def test_build_model_full_tree():
     gated = [t.name for t in researcher.tools if t.gated]
     assert gated == ["save"]
 
+    # Main agent lists its built-in tools (from Planning/Filesystem/SubAgent) as bundled.
+    main_tool_names = [t.name for t in m.tools]
+    assert "compile" in main_tool_names  # user tool
+    assert "write_todos" in main_tool_names  # Planning built-in
+    assert "task" in main_tool_names  # SubAgent built-in
+    assert {t.name for t in m.tools if t.bundled} >= {"write_todos", "ls", "task"}
+
     gp = m.subagents[1]
     assert gp.is_builtin is True
+    # general-purpose inherits the main model, the main agent's custom tools, and the
+    # Planning/Filesystem built-ins.
+    assert gp.model_name == "anthropic:claude-sonnet-4-6"
+    gp_names = [t.name for t in gp.tools]
+    assert "compile" in gp_names  # inherited custom tool
+    assert "write_todos" in gp_names and "ls" in gp_names  # inherited built-ins
+    # It is NOT given SubAgentMiddleware, so it has no `task` tool (can't spawn subagents).
+    assert "task" not in gp_names
+    # inherited custom tools are not bundled; the built-ins are.
+    assert {t.name for t in gp.tools if t.bundled} >= {"write_todos", "ls"}
+    assert not next(t for t in gp.tools if t.name == "compile").bundled
 
 
 def test_build_model_default_name_and_no_subagents():
@@ -132,7 +155,8 @@ def test_permission_labels():
     assert permission_labels([perm]) == ["allow read,write /x/**"]
 
 
-def test_middleware_memory_sources_branch():
+def test_middleware_user_memory_is_not_bundled():
+    # User-supplied middleware: name is stripped of the "Middleware" suffix, no source path.
     mw = type("MemoryMiddleware", (), {})()
     mw.sources = ["/mem.md"]
     labels = middleware_labels(
@@ -143,12 +167,12 @@ def test_middleware_memory_sources_branch():
         has_subagents=False,
         include_defaults=False,
     )
-    assert "Memory(/mem.md)" in labels
+    assert [(m.name, m.bundled) for m in labels] == [("Memory", False)]
 
 
 def test_middleware_labels_dedup():
+    # A user Memory middleware and a configured `memory` source both map to "Memory".
     mw = type("MemoryMiddleware", (), {})()
-    mw.sources = ["/a"]
     labels = middleware_labels(
         [mw],
         skills=None,
@@ -157,7 +181,7 @@ def test_middleware_labels_dedup():
         has_subagents=False,
         include_defaults=False,
     )
-    assert labels.count("Memory(/a)") == 1
+    assert [m.name for m in labels].count("Memory") == 1
 
 
 def test_build_model_collapses_duplicate_mcp_badges():

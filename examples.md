@@ -9,15 +9,22 @@ resulting diagram.
 
 ## How to read the diagrams
 
-- Each agent is a `subgraph` box labelled `name · model`.
-- `🧩` lists the agent's **middleware** (e.g. `~Planning/TODO`, `~Filesystem`, `SubAgent`,
-  `HITL`). A `~`-prefixed entry is inferred from DeepAgents defaults.
-- `🔧` lists the agent's **tools**. A `⚠` suffix and a red border (`:::gated`) mark a tool
-  behind a human-in-the-loop (HITL) `interrupt_on` gate.
-- `🔌 MCP: <server>` marks an MCP server (shown as an existence badge only — individual
-  tool names are not resolved).
-- `-->|task|` edges connect a parent agent to each subagent it can dispatch. Every
-  DeepAgents agent gets the built-in `general-purpose` subagent automatically.
+- Each agent is a pastel-blue `subgraph` box titled with the agent **name** on the first
+  line and `🧠 model` on the second.
+- A pastel-yellow `🧩 Middleware` box lists the agent's middleware, one per line. A `📦`
+  prefix marks middleware DeepAgents bundles by default (e.g. `📦 Planning`,
+  `📦 Filesystem`, `📦 SubAgent`, `📦 HITL`); unprefixed entries are user-supplied.
+- A pastel-green `🔧 Tools` box lists the agent's tools, one per line. `📦`-prefixed tools
+  are the built-in tools contributed by the bundled middleware (`write_todos`, the
+  filesystem tools, `task`). An MCP server appears as `🔌 <server> (MCP)` — an existence
+  badge only; individual MCP tool names are not resolved.
+- A tool behind a human-in-the-loop (HITL) `interrupt_on` gate is prefixed with a red `⚠`
+  and suffixed `(HITL)`. A gate on an MCP tool (whose name we can't resolve to the badge)
+  is shown as its own `⚠ <name> (HITL)` line.
+- `sub-agent (task)` edges connect a parent agent to each subagent it can dispatch. Every
+  DeepAgents agent gets the built-in `general-purpose` subagent automatically (shown with
+  a `📦` prefix). It inherits the main agent's model and tools but is *not* given the
+  `task` tool, so it cannot itself spawn further subagents.
 
 To view a diagram, paste the Mermaid block into <https://mermaid.live>, or drop it in a
 ` ```mermaid ` fenced block in a Markdown file on GitHub (as done below).
@@ -98,50 +105,66 @@ The directory's `langgraph.json` points the tool at the `agent` attribute:
 ### Output
 
 ```
+%%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef gated stroke:#c00,stroke-width:2px;
-  subgraph agent["agent · anthropic:claude-sonnet-4-6"]
-    agent_mw["🧩 ~Planning/TODO · ~Filesystem · SubAgent · HITL"]
-    agent_t["🔧 add · danger ⚠"]:::gated
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  subgraph agent["agent<br/>🧠 anthropic:claude-sonnet-4-6"]
+    agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 HITL</div>"]:::mwBox
+    agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
   end
-  agent -->|task| researcher
-  subgraph researcher["researcher · anthropic:claude-haiku-4-5"]
-    researcher_mw["🧩 HITL"]
-    researcher_t["🔧 add ⚠"]:::gated
+  agent -->|"sub-agent (task)"| researcher
+  subgraph researcher["researcher<br/>🧠 anthropic:claude-haiku-4-5"]
+    researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
+    researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/><span style='color:#c00'>⚠</span> add (HITL)</div>"]:::toolBox
   end
-  agent -->|task| general_purpose
-  subgraph general_purpose["general-purpose (built-in, inherits main tools)"]
+  agent -->|"sub-agent (task)"| general_purpose
+  subgraph general_purpose["📦 general-purpose<br/>🧠 anthropic:claude-sonnet-4-6"]
+    general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
+  style agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
 ```
 
 ### Rendered
 
 ```mermaid
+%%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef gated stroke:#c00,stroke-width:2px;
-  subgraph agent["agent · anthropic:claude-sonnet-4-6"]
-    agent_mw["🧩 ~Planning/TODO · ~Filesystem · SubAgent · HITL"]
-    agent_t["🔧 add · danger ⚠"]:::gated
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  subgraph agent["agent<br/>🧠 anthropic:claude-sonnet-4-6"]
+    agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 HITL</div>"]:::mwBox
+    agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
   end
-  agent -->|task| researcher
-  subgraph researcher["researcher · anthropic:claude-haiku-4-5"]
-    researcher_mw["🧩 HITL"]
-    researcher_t["🔧 add ⚠"]:::gated
+  agent -->|"sub-agent (task)"| researcher
+  subgraph researcher["researcher<br/>🧠 anthropic:claude-haiku-4-5"]
+    researcher_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
+    researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/><span style='color:#c00'>⚠</span> add (HITL)</div>"]:::toolBox
   end
-  agent -->|task| general_purpose
-  subgraph general_purpose["general-purpose (built-in, inherits main tools)"]
+  agent -->|"sub-agent (task)"| general_purpose
+  subgraph general_purpose["📦 general-purpose<br/>🧠 anthropic:claude-sonnet-4-6"]
+    general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
+  style agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
 ```
 
 ### Reading it
 
-- The main `agent` runs `claude-sonnet-4-6`, carries the default middleware stack plus
-  `SubAgent` and `HITL` (because it has subagents and gates), and exposes `add` and
-  `danger`. `danger` is gated (`⚠`, red border) via `interrupt_on={"danger": True}`.
-- The `researcher` subagent runs `claude-haiku-4-5` with only `add`, which is itself gated
-  by the subagent's own `interrupt_on={"add": True}`.
-- `general-purpose` is the built-in subagent every DeepAgents agent gets for free; it
-  inherits the main agent's tools, so no tools are listed.
+- The main `agent` runs `claude-sonnet-4-6` and carries the default middleware stack plus
+  `📦 SubAgent` and `📦 HITL` (because it has subagents and gates). Its tools are the
+  user-defined `add` and `danger`, followed by the `📦`-prefixed built-ins from Planning,
+  Filesystem, and SubAgent. `danger` is gated (red `⚠`, `(HITL)`) via
+  `interrupt_on={"danger": True}`.
+- The `researcher` subagent runs `claude-haiku-4-5` with only `add`, itself gated by the
+  subagent's own `interrupt_on={"add": True}`.
+- `general-purpose` is the built-in subagent every DeepAgents agent gets for free. It
+  inherits the main agent's model and tools (so `add`/`danger` appear, `danger` still
+  gated) plus the Planning/Filesystem built-ins — but note it has **no `task` tool**, so
+  unlike the main agent it cannot dispatch subagents.
 
 ---
 
@@ -200,33 +223,40 @@ Its `langgraph.json` points the `agent` graph at the factory:
 ### Output
 
 ```
+%%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef gated stroke:#c00,stroke-width:2px;
-  subgraph factory_agent["factory-agent · anthropic:claude-haiku-4-5"]
-    factory_agent_mw["🧩 ~Planning/TODO · ~Filesystem"]
-    factory_agent_t["🔧 ping"]
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  subgraph factory_agent["factory-agent<br/>🧠 anthropic:claude-haiku-4-5"]
+    factory_agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    factory_agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>ping<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
+  style factory_agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
 ```
 
 ### Rendered
 
 ```mermaid
+%%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef gated stroke:#c00,stroke-width:2px;
-  subgraph factory_agent["factory-agent · anthropic:claude-haiku-4-5"]
-    factory_agent_mw["🧩 ~Planning/TODO · ~Filesystem"]
-    factory_agent_t["🔧 ping"]
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  subgraph factory_agent["factory-agent<br/>🧠 anthropic:claude-haiku-4-5"]
+    factory_agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
+    factory_agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>ping<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
+  style factory_agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
 ```
 
 ### Reading it
 
 - The agent is named `factory-agent` (from the `name=` argument) and runs
   `claude-haiku-4-5`.
-- It carries only the two default-inferred middleware entries (`~Planning/TODO`,
-  `~Filesystem`) — there are no subagents (so no `SubAgent`) and no `interrupt_on` gates
+- It carries only the two default-bundled middleware entries (`📦 Planning`,
+  `📦 Filesystem`) — there are no subagents (so no `SubAgent`) and no `interrupt_on` gates
   (so no `HITL`).
-- Its single tool `ping` is not gated.
+- Its tools are the user-defined `ping`, followed by the `📦`-prefixed built-ins from
+  Planning (`write_todos`) and Filesystem (`ls`, `read_file`, …). Nothing is gated.
 
 ---
 
@@ -311,79 +341,106 @@ Running the steps above against the `main` branch of `lca-deepagents` (with no A
 set — extraction is offline) produces:
 
 ```
+%%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef gated stroke:#c00,stroke-width:2px;
-  subgraph chinook_sales_assistant["chinook-sales-assistant · claude-sonnet-4-6"]
-    chinook_sales_assistant_mw["🧩 ~Planning/TODO · ~Filesystem · SubAgent · Skills(/skills) · Memory(/AGENTS.md) · CodeInterpreter"]
-    chinook_sales_assistant_t["🔧 markdown_to_html · render_pie_chart · 🔌 MCP: mock-mail"]
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  subgraph chinook_sales_assistant["chinook-sales-assistant<br/>🧠 claude-sonnet-4-6"]
+    chinook_sales_assistant_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 Skills<br/>📦 Memory<br/>CodeInterpreter</div>"]:::mwBox
+    chinook_sales_assistant_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| chinook_analyst
-  subgraph chinook_analyst["chinook-analyst · claude-haiku-4-5"]
-    chinook_analyst_mw["🧩 HITL · Memory(/agents/chinook-analyst/AGENTS.md)"]
-    chinook_analyst_t["🔧 query_chinook · introspect_schema · add_customer ⚠"]:::gated
+  chinook_sales_assistant -->|"sub-agent (task)"| chinook_analyst
+  subgraph chinook_analyst["chinook-analyst<br/>🧠 claude-haiku-4-5"]
+    chinook_analyst_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL<br/>Memory</div>"]:::mwBox
+    chinook_analyst_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>query_chinook<br/>introspect_schema<br/><span style='color:#c00'>⚠</span> add_customer (HITL)</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| quote_reviewer
-  subgraph quote_reviewer["quote-reviewer · claude-sonnet-4-6"]
+  chinook_sales_assistant -->|"sub-agent (task)"| quote_reviewer
+  subgraph quote_reviewer["quote-reviewer<br/>🧠 claude-sonnet-4-6"]
   end
-  chinook_sales_assistant -->|task| inbox_manager
-  subgraph inbox_manager["inbox-manager · claude-haiku-4-5"]
-    inbox_manager_mw["🧩 HITL"]
-    inbox_manager_t["🔧 🔌 MCP: mock-mail"]
+  chinook_sales_assistant -->|"sub-agent (task)"| inbox_manager
+  subgraph inbox_manager["inbox-manager<br/>🧠 claude-haiku-4-5"]
+    inbox_manager_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
+    inbox_manager_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>🔌 mock-mail (MCP)<br/><span style='color:#c00'>⚠</span> mail_create_draft (HITL)</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| genre_researcher
-  subgraph genre_researcher["genre-researcher · claude-haiku-4-5"]
-    genre_researcher_t["🔧 internet_search"]
+  chinook_sales_assistant -->|"sub-agent (task)"| genre_researcher
+  subgraph genre_researcher["genre-researcher<br/>🧠 claude-haiku-4-5"]
+    genre_researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>internet_search</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| general_purpose
-  subgraph general_purpose["general-purpose (built-in, inherits main tools)"]
+  chinook_sales_assistant -->|"sub-agent (task)"| general_purpose
+  subgraph general_purpose["📦 general-purpose<br/>🧠 claude-sonnet-4-6"]
+    general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
+  style chinook_sales_assistant fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style chinook_analyst fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style quote_reviewer fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style inbox_manager fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style genre_researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
 ```
 
 ### Rendered
 
 ```mermaid
+%%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef gated stroke:#c00,stroke-width:2px;
-  subgraph chinook_sales_assistant["chinook-sales-assistant · claude-sonnet-4-6"]
-    chinook_sales_assistant_mw["🧩 ~Planning/TODO · ~Filesystem · SubAgent · Skills(/skills) · Memory(/AGENTS.md) · CodeInterpreter"]
-    chinook_sales_assistant_t["🔧 markdown_to_html · render_pie_chart · 🔌 MCP: mock-mail"]
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  subgraph chinook_sales_assistant["chinook-sales-assistant<br/>🧠 claude-sonnet-4-6"]
+    chinook_sales_assistant_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 Skills<br/>📦 Memory<br/>CodeInterpreter</div>"]:::mwBox
+    chinook_sales_assistant_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| chinook_analyst
-  subgraph chinook_analyst["chinook-analyst · claude-haiku-4-5"]
-    chinook_analyst_mw["🧩 HITL · Memory(/agents/chinook-analyst/AGENTS.md)"]
-    chinook_analyst_t["🔧 query_chinook · introspect_schema · add_customer ⚠"]:::gated
+  chinook_sales_assistant -->|"sub-agent (task)"| chinook_analyst
+  subgraph chinook_analyst["chinook-analyst<br/>🧠 claude-haiku-4-5"]
+    chinook_analyst_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL<br/>Memory</div>"]:::mwBox
+    chinook_analyst_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>query_chinook<br/>introspect_schema<br/><span style='color:#c00'>⚠</span> add_customer (HITL)</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| quote_reviewer
-  subgraph quote_reviewer["quote-reviewer · claude-sonnet-4-6"]
+  chinook_sales_assistant -->|"sub-agent (task)"| quote_reviewer
+  subgraph quote_reviewer["quote-reviewer<br/>🧠 claude-sonnet-4-6"]
   end
-  chinook_sales_assistant -->|task| inbox_manager
-  subgraph inbox_manager["inbox-manager · claude-haiku-4-5"]
-    inbox_manager_mw["🧩 HITL"]
-    inbox_manager_t["🔧 🔌 MCP: mock-mail"]
+  chinook_sales_assistant -->|"sub-agent (task)"| inbox_manager
+  subgraph inbox_manager["inbox-manager<br/>🧠 claude-haiku-4-5"]
+    inbox_manager_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 HITL</div>"]:::mwBox
+    inbox_manager_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>🔌 mock-mail (MCP)<br/><span style='color:#c00'>⚠</span> mail_create_draft (HITL)</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| genre_researcher
-  subgraph genre_researcher["genre-researcher · claude-haiku-4-5"]
-    genre_researcher_t["🔧 internet_search"]
+  chinook_sales_assistant -->|"sub-agent (task)"| genre_researcher
+  subgraph genre_researcher["genre-researcher<br/>🧠 claude-haiku-4-5"]
+    genre_researcher_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>internet_search</div>"]:::toolBox
   end
-  chinook_sales_assistant -->|task| general_purpose
-  subgraph general_purpose["general-purpose (built-in, inherits main tools)"]
+  chinook_sales_assistant -->|"sub-agent (task)"| general_purpose
+  subgraph general_purpose["📦 general-purpose<br/>🧠 claude-sonnet-4-6"]
+    general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
+  style chinook_sales_assistant fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style chinook_analyst fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style quote_reviewer fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style inbox_manager fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style genre_researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
 ```
 
 ### Reading it
 
 - The main `chinook-sales-assistant` runs `claude-sonnet-4-6` with a rich middleware
-  stack: the DeepAgents defaults plus `SubAgent`, `Skills(/skills)`, `Memory(/AGENTS.md)`,
-  and a `CodeInterpreter`. Its tools are `markdown_to_html`, `render_pie_chart`, and the
-  `mock-mail` MCP server (badge only — individual MCP tool names are not resolved).
+  stack: the DeepAgents defaults (`📦 Planning`, `📦 Filesystem`) plus `📦 SubAgent`,
+  `📦 Skills`, `📦 Memory`, and a user-supplied `CodeInterpreter` (no `📦` — it isn't a
+  DeepAgents default). Its tools are the user-defined `markdown_to_html` and
+  `render_pie_chart`, the `mock-mail` MCP server (badge only), and the `📦` built-ins from
+  its bundled middleware (including `task`, since it has `SubAgent`).
 - Four declared subagents fan out from it:
-  - `chinook-analyst` (`claude-haiku-4-5`) has its own memory file and a gated
-    `add_customer` tool (`⚠`) alongside `query_chinook` and `introspect_schema`.
-  - `inbox-manager` (`claude-haiku-4-5`) is HITL-gated and works through the `mock-mail`
-    MCP server.
+  - `chinook-analyst` (`claude-haiku-4-5`) has its own `Memory` middleware and a gated
+    `add_customer` tool (red `⚠`, `(HITL)`) alongside `query_chinook` and
+    `introspect_schema`.
+  - `inbox-manager` (`claude-haiku-4-5`) works through the `mock-mail` MCP server and gates
+    `mail_create_draft`. Because individual MCP tool names aren't resolved, that gate can't
+    attach to the badge, so it appears as its own `⚠ mail_create_draft (HITL)` line. (Note
+    the main agent has the same `mock-mail` server but no such gate — its mail access is
+    ungated.)
   - `genre-researcher` (`claude-haiku-4-5`) has an `internet_search` tool.
   - `quote-reviewer` (`claude-sonnet-4-6`) has no listed tools or extra middleware.
-- `general-purpose` is the built-in subagent, as in the earlier examples.
+- `general-purpose` is the built-in subagent (prefixed `📦`). It inherits the main model
+  and the main agent's custom tools (`markdown_to_html`, `render_pie_chart`, `mock-mail`)
+  plus the Planning/Filesystem built-ins — but **not** `task`, so it cannot spawn further
+  subagents.
 
 > The exact diagram depends on how `sales_assistant` is defined at the commit you check
 > out — its model, tools, MCP servers, HITL gates, and subagents. The output above is from
