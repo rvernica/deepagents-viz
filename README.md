@@ -1,6 +1,6 @@
 # deepagents-viz
 
-Render a [LangChain DeepAgents](https://docs.langchain.com/oss/python/deepagents/overview.md)
+Render a [LangChain DeepAgents](https://docs.langchain.com/oss/python/deepagents/overview)
 agent's architecture — subagent hierarchy, tools per agent, HITL gates, and middleware —
 as a Mermaid diagram. Extraction is **offline**: no LLM keys, no live services.
 
