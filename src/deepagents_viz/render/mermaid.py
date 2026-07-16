@@ -14,6 +14,12 @@ MW_FILL, MW_STROKE = "#fff2cc", "#d6b656"  # light yellow
 TOOL_FILL, TOOL_STROKE = "#d5e8d4", "#82b366"  # light green
 BORDER = "3px"
 
+# Force dark text on every styled element. Fills are always light, but GitHub renders
+# Mermaid with a theme chosen from the viewer's color scheme; its dark theme drives the
+# default text color light, which is unreadable on our light pastels. Pinning the text
+# color keeps titles and labels legible in both GitHub light and dark modes.
+TEXT = "#1a1a1a"
+
 # Extra breathing room under the (two-line) subgraph titles so they never overlap the
 # first inner box; small node padding so each box hugs its content, which keeps the
 # left-aligned titles pinned to the top-left corner instead of floating in the middle.
@@ -75,15 +81,17 @@ def _emit_agent(a: AgentModel, lines: list[str], styles: list[str]) -> None:
         body = "🔧 <b>Tools</b><br/>" + "<br/>".join(_esc(_tool_label(t)) for t in tool_entries)
         lines.append(f'    {nid}_t["{_left(body)}"]:::toolBox')
     lines.append("  end")
-    styles.append(f"  style {nid} fill:{AGENT_FILL},stroke:{AGENT_STROKE},stroke-width:{BORDER};")
+    styles.append(
+        f"  style {nid} fill:{AGENT_FILL},stroke:{AGENT_STROKE},stroke-width:{BORDER},color:{TEXT};"
+    )
 
 
 def render(agent: AgentModel) -> str:
     lines: list[str] = [
         INIT,
         "graph TD",
-        f"  classDef mwBox fill:{MW_FILL},stroke:{MW_STROKE},stroke-width:{BORDER};",
-        f"  classDef toolBox fill:{TOOL_FILL},stroke:{TOOL_STROKE},stroke-width:{BORDER};",
+        f"  classDef mwBox fill:{MW_FILL},stroke:{MW_STROKE},stroke-width:{BORDER},color:{TEXT};",
+        f"  classDef toolBox fill:{TOOL_FILL},stroke:{TOOL_STROKE},stroke-width:{BORDER},color:{TEXT};",
     ]
     styles: list[str] = []
     _emit_agent(agent, lines, styles)

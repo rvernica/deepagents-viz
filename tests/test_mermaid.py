@@ -46,6 +46,16 @@ def test_boxes_are_pastel_and_thick_bordered():
     assert "fill:#d5e8d4,stroke:#82b366,stroke-width:3px" in out
 
 
+def test_text_color_pinned_dark_for_github_dark_mode():
+    out = render(_main())
+    # GitHub renders Mermaid with a theme chosen from the viewer's color scheme; its dark
+    # theme would drive default text light, unreadable on our light pastels. Every styled
+    # element must pin dark text so titles/labels stay legible in both light and dark.
+    assert "fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a" in out  # agent
+    assert "fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a" in out  # middleware
+    assert "fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a" in out  # tools
+
+
 def test_task_edges_to_each_subagent():
     out = render(_main())
     assert '-->|"sub-agent (task)"| chinook_analyst' in out
