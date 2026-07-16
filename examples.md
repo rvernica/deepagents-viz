@@ -107,8 +107,8 @@ The directory's `langgraph.json` points the tool at the `agent` attribute:
 ```
 %%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
-  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a;
   subgraph agent["agent<br/>🧠 anthropic:claude-sonnet-4-6"]
     agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 HITL</div>"]:::mwBox
     agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
@@ -122,9 +122,9 @@ graph TD
   subgraph general_purpose["📦 general-purpose<br/>🧠 anthropic:claude-sonnet-4-6"]
     general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
-  style agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
 ```
 
 ### Rendered
@@ -132,8 +132,8 @@ graph TD
 ```mermaid
 %%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
-  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a;
   subgraph agent["agent<br/>🧠 anthropic:claude-sonnet-4-6"]
     agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 HITL</div>"]:::mwBox
     agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
@@ -147,9 +147,9 @@ graph TD
   subgraph general_purpose["📦 general-purpose<br/>🧠 anthropic:claude-sonnet-4-6"]
     general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>add<br/><span style='color:#c00'>⚠</span> danger (HITL)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
-  style agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
 ```
 
 ### Reading it
@@ -227,13 +227,13 @@ Its `langgraph.json` points the `agent` graph at the factory:
 ```
 %%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
-  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a;
   subgraph factory_agent["factory-agent<br/>🧠 anthropic:claude-haiku-4-5"]
     factory_agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
     factory_agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>ping<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
-  style factory_agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style factory_agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
 ```
 
 ### Rendered
@@ -241,13 +241,13 @@ graph TD
 ```mermaid
 %%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
-  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a;
   subgraph factory_agent["factory-agent<br/>🧠 anthropic:claude-haiku-4-5"]
     factory_agent_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem</div>"]:::mwBox
     factory_agent_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>ping<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
-  style factory_agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style factory_agent fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
 ```
 
 ### Reading it
@@ -345,8 +345,8 @@ set — extraction is offline) produces:
 ```
 %%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
-  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a;
   subgraph chinook_sales_assistant["chinook-sales-assistant<br/>🧠 claude-sonnet-4-6"]
     chinook_sales_assistant_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 Skills<br/>📦 Memory<br/>CodeInterpreter</div>"]:::mwBox
     chinook_sales_assistant_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
@@ -375,12 +375,12 @@ graph TD
   subgraph general_purpose["📦 general-purpose<br/>🧠 claude-sonnet-4-6"]
     general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
-  style chinook_sales_assistant fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style chinook_analyst fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style quote_reviewer fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style inbox_manager fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style genre_researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style chinook_sales_assistant fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style chinook_analyst fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style quote_reviewer fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style inbox_manager fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style genre_researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
 ```
 
 ### Rendered
@@ -388,8 +388,8 @@ graph TD
 ```mermaid
 %%{init: {'flowchart': {'subGraphTitleMargin': {'top': 6, 'bottom': 16}, 'padding': 4}}}%%
 graph TD
-  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px;
-  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px;
+  classDef mwBox fill:#fff2cc,stroke:#d6b656,stroke-width:3px,color:#1a1a1a;
+  classDef toolBox fill:#d5e8d4,stroke:#82b366,stroke-width:3px,color:#1a1a1a;
   subgraph chinook_sales_assistant["chinook-sales-assistant<br/>🧠 claude-sonnet-4-6"]
     chinook_sales_assistant_mw["<div style='text-align:left'>🧩 <b>Middleware</b><br/>📦 Planning<br/>📦 Filesystem<br/>📦 SubAgent<br/>📦 Skills<br/>📦 Memory<br/>CodeInterpreter</div>"]:::mwBox
     chinook_sales_assistant_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep<br/>📦 task</div>"]:::toolBox
@@ -418,12 +418,12 @@ graph TD
   subgraph general_purpose["📦 general-purpose<br/>🧠 claude-sonnet-4-6"]
     general_purpose_t["<div style='text-align:left'>🔧 <b>Tools</b><br/>markdown_to_html<br/>render_pie_chart<br/>🔌 mock-mail (MCP)<br/>📦 write_todos<br/>📦 ls<br/>📦 read_file<br/>📦 write_file<br/>📦 edit_file<br/>📦 glob<br/>📦 grep</div>"]:::toolBox
   end
-  style chinook_sales_assistant fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style chinook_analyst fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style quote_reviewer fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style inbox_manager fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style genre_researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
-  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px;
+  style chinook_sales_assistant fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style chinook_analyst fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style quote_reviewer fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style inbox_manager fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style genre_researcher fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
+  style general_purpose fill:#dae8fc,stroke:#6c8ebf,stroke-width:3px,color:#1a1a1a;
 ```
 
 ### Reading it
